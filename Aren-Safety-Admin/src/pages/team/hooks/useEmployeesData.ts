@@ -3,8 +3,8 @@ import { useEmployees } from '@/features/employees/api';
 import type { EmployeeFilters } from '../types';
 
 export const useEmployeesData = (filters: EmployeeFilters) => {
-  // Fetch employees from API (filtering by type 'employee')
-  const { data: employees = [], isLoading } = useEmployees({ type: 'employee' });
+  // Fetch employees from API
+  const { data: employees = [], isLoading } = useEmployees();
 
   // Get unique values for filter dropdowns
   const departments = useMemo(

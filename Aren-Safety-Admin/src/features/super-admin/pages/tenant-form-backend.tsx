@@ -40,7 +40,7 @@ export default function TenantFormBackendPage() {
   const isEditMode = !!tenantId;
   const [form] = Form.useForm();
 
-  const { data: tenant, isLoading } = useTenantQuery(tenantId || '');
+  const { data: tenant } = useTenantQuery(tenantId || '');
   const createTenant = useCreateTenantMutation();
   const updateTenant = useUpdateTenantMutation(tenantId || '');
 

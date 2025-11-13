@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Drawer, Form, Input, Select, DatePicker, InputNumber, Button, Space, message, AutoComplete, Divider, Card, Typography } from 'antd';
+import { Drawer, Form, Input, Select, DatePicker, InputNumber, Button, Space, message, AutoComplete, Card, Typography } from 'antd';
 import { UserAddOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import { useCreateEmployee, useEmployees } from '@/features/employees/api';
 import { useDepartmentsQuery } from '@/features/tenant/api/departments';
@@ -7,7 +7,7 @@ import type { Employee } from '@/shared/config/mock-employees';
 
 const { Option } = Select;
 const { TextArea } = Input;
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 interface CreateEmployeeDrawerProps {
   open: boolean;

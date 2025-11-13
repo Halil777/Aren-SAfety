@@ -53,7 +53,7 @@ export const getColumnSelectProps = (dataIndex: keyof Employee, options: string[
 export const createEmployeeColumns = (
   departments: string[],
   locations: string[],
-  onViewEmployee: (employee: Employee) => void
+  _onViewEmployee: (employee: Employee) => void
 ): ColumnsType<Employee> => [
   {
     title: 'Employee',

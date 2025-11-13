@@ -2,7 +2,6 @@
 import { EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import type { TFunction } from "i18next";
-import type { i18n } from "i18next";
 import type { Observation } from "../types";
 
 const getStatusColor = (status: Observation["status"]) =>

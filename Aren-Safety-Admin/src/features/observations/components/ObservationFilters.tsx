@@ -1,7 +1,7 @@
 ﻿import { Select, DatePicker, Row, Col } from 'antd';
 import styled from 'styled-components';
 import { useTranslation } from 'react-i18next';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useProjectCodesQuery } from '@/features/tenant/api/project-codes';
 import { useDepartmentsQuery } from '@/features/tenant/api/departments';
 import type {
@@ -54,7 +54,7 @@ export function ObservationFilters({ onFilterChange }: ObservationFiltersProps) 
             value={currentFilters.projectCode}
             onChange={(value) => updateFilter('projectCode', value)}
             filterOption={(input, option) =>
-              (option?.children as string)?.toLowerCase().includes(input.toLowerCase())
+              (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
             }
           >
             {projectCodes.map((project) => (

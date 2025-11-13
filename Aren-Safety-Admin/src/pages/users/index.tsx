@@ -59,7 +59,7 @@ const ChartCard = styled(Card)<{ $isDark: boolean }>`
   border: 1px solid ${({ $isDark }) => ($isDark ? 'rgba(51, 65, 85, 0.3)' : 'rgba(226, 232, 240, 0.8)')};
   background: ${({ $isDark }) => ($isDark ? '#1e293b' : '#ffffff')};
   box-shadow: ${({ $isDark }) =>
-    $isDark ? '0 4px 16px rgba(0, 0, 0, 0.3)' : '0 4px 16px rgba(15, 23, 42, 0.04)')};
+    $isDark ? '0 4px 16px rgba(0, 0, 0, 0.3)' : '0 4px 16px rgba(15, 23, 42, 0.04)'};
   margin-bottom: 24px;
 `;
 
@@ -321,12 +321,12 @@ const UsersPage: React.FC = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  label={({ name, percent }: any) => `${name} ${(percent * 100).toFixed(0)}%`}
                   outerRadius={100}
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {roleChartData.map((entry, index) => (
+                  {roleChartData.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

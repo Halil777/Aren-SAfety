@@ -19,10 +19,10 @@ const SafetyTeamTabComponent: React.FC = () => {
   const summary = useMemo(() => {
     const count = safetyStaffMembers.length;
     const averageExperience = count > 0
-      ? safetyStaffMembers.reduce((sum, m) => sum + (m.yearsOfExperience || 0), 0) / count
+      ? safetyStaffMembers.reduce((sum, m) => sum + ((m.yearsOfExperience as number) || 0), 0) / count
       : 0;
-    const experts = safetyStaffMembers.filter((m) => m.certificationLevel === 'expert').length;
-    const dayShift = safetyStaffMembers.filter((m) => m.shift === 'day').length;
+    const experts = safetyStaffMembers.filter((m) => (m.certificationLevel as string) === 'expert').length;
+    const dayShift = safetyStaffMembers.filter((m) => (m.shift as string) === 'day').length;
 
     return {
       count,
@@ -48,7 +48,7 @@ const SafetyTeamTabComponent: React.FC = () => {
 
   return (
     <Spin spinning={isLoading} tip="Loading safety team...">
-      <SafetyStaffGrid members={safetyStaffMembers} summary={summary} isDark={theme === 'dark'} />
+      <SafetyStaffGrid members={safetyStaffMembers as any} summary={summary} isDark={theme === 'dark'} />
     </Spin>
   );
 };

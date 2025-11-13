@@ -11,7 +11,6 @@ import styled from 'styled-components';
 import {
   useCreateTenantAdminMutation,
   useTenantQuery,
-  type Tenant,
   type TenantAdmin,
 } from '@/features/super-admin/api/tenants';
 

@@ -86,7 +86,7 @@ export const useCreateEmployee = () => {
 
       return { previousEmployees };
     },
-    onError: (err, newEmployee, context) => {
+    onError: (_err, _newEmployee, context) => {
       // Rollback on error
       if (context?.previousEmployees) {
         context.previousEmployees.forEach(([queryKey, data]) => {
@@ -128,7 +128,7 @@ export const useUpdateEmployee = () => {
 
       return { previousEmployees, previousEmployee, id };
     },
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       // Rollback on error
       if (context?.previousEmployees) {
         context.previousEmployees.forEach(([queryKey, data]) => {
@@ -166,7 +166,7 @@ export const useDeleteEmployee = () => {
 
       return { previousEmployees };
     },
-    onError: (err, id, context) => {
+    onError: (_err, _id, context) => {
       // Rollback on error
       if (context?.previousEmployees) {
         context.previousEmployees.forEach(([queryKey, data]) => {

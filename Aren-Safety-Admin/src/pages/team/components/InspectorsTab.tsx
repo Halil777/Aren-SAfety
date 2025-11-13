@@ -11,7 +11,7 @@ const InspectorsTabComponent: React.FC = () => {
 
   // Filter inspectors
   const inspectors = useMemo(
-    () => allEmployees.filter((emp) => emp.safetyRole === 'inspector') as Inspector[],
+    () => allEmployees.filter((emp) => emp.safetyRole === 'inspector') as unknown as Inspector[],
     [allEmployees]
   );
 
@@ -28,10 +28,11 @@ const InspectorsTabComponent: React.FC = () => {
   }, [inspectors]);
 
   const handleAddInspector = useCallback((input: InspectorInput) => {
+    const fullName = (input.fullName as string) || '';
     const newInspector = {
       employeeNumber: `INS-${Date.now()}`,
-      firstName: input.fullName?.split(' ')[0] || 'Unknown',
-      lastName: input.fullName?.split(' ').slice(1).join(' ') || '',
+      firstName: fullName.split(' ')[0] || 'Unknown',
+      lastName: fullName.split(' ').slice(1).join(' ') || '',
       department: input.department || 'Inspections',
       position: input.position || 'Inspector',
       email: input.email || '',

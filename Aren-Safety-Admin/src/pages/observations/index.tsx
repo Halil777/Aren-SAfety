@@ -15,7 +15,7 @@ import { ObservationCharts } from '@/features/observations/components/Observatio
 import { useObservations, useCreateObservation, useUpdateObservation, useDeleteObservation } from '@/features/observations/api';
 import type { Observation, ObservationFilterParams } from '@/features/observations';
 import { exportToExcel, exportToPDF, printTable } from '@/shared/utils/export-utils';
-import { Drawer, Form, Input, Select, DatePicker, InputNumber, notification, Modal } from 'antd';
+import { Drawer, Form, Input, Select, DatePicker, notification, Modal } from 'antd';
 const { TextArea } = Input;
 import { useProjectCodesQuery } from '@/features/tenant/api/project-codes';
 import { useDepartmentsQuery } from '@/features/tenant/api/departments';
@@ -275,7 +275,7 @@ export function ObservationsPage() {
               placeholder={t('observations.form.placeholders.projectCode')}
               showSearch
               filterOption={(input, option) =>
-                (option?.children as string)?.toLowerCase().includes(input.toLowerCase())
+                (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
               }
             >
               {projectCodes.map((project) => (
@@ -496,7 +496,7 @@ export function ObservationsPage() {
               placeholder="Select project code"
               showSearch
               filterOption={(input, option) =>
-                (option?.children as string)?.toLowerCase().includes(input.toLowerCase())
+                (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
               }
             >
               {projectCodes.map((project) => (

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { Card, Descriptions, Drawer, Space, Table, Tag, Alert, Spin, Button, Popconfirm, message, Tooltip, Typography } from 'antd';
 import { EyeOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useEmployees, useUpdateEmployee, useDeleteEmployee } from '@/features/employees/api';
+import { useEmployees, useDeleteEmployee } from '@/features/employees/api';
 import { createEmployeeColumns } from '../utils/tableColumns';
 import type { Employee } from '@/shared/config/mock-employees';
 
@@ -10,7 +10,6 @@ const { Text } = Typography;
 const EmployeesTabComponent: React.FC = () => {
   // Fetch employees data
   const { data: employees = [], isLoading, isError, error } = useEmployees();
-  const updateEmployeeMutation = useUpdateEmployee();
   const deleteEmployeeMutation = useDeleteEmployee();
 
   // Employee details drawer

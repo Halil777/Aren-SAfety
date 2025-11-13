@@ -165,7 +165,7 @@ export const useCreateUser = () => {
 
       return { previousUsers };
     },
-    onError: (err, newUser, context) => {
+    onError: (_err, _newUser, context) => {
       if (context?.previousUsers) {
         context.previousUsers.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
@@ -203,7 +203,7 @@ export const useUpdateUser = () => {
 
       return { previousUsers, previousUser, id };
     },
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       if (context?.previousUsers) {
         context.previousUsers.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);
@@ -237,7 +237,7 @@ export const useDeleteUser = () => {
 
       return { previousUsers };
     },
-    onError: (err, id, context) => {
+    onError: (_err, _id, context) => {
       if (context?.previousUsers) {
         context.previousUsers.forEach(([queryKey, data]) => {
           queryClient.setQueryData(queryKey, data);

@@ -30,7 +30,7 @@ import {
 import { useTranslation } from "react-i18next";
 
 export function DepartmentsPage() {
-  const { i18n } = useTranslation();
+  useTranslation();
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [createModalOpen, setCreateModalOpen] = useState(false);
