@@ -1,0 +1,370 @@
+API Endpoints (NestJS) — Global Prefix: /api
+
+GET /api
+- Response: {"status":"ok"}
+
+GET /api/users
+- Response: Array of app users (from UsersService)
+
+POST /api/auth/login
+- Body (JSON):
+  {
+    "login": "string",
+    "password": "string(min 6)"
+  }
+- Response:
+  {
+    "token": "string",
+    "refreshToken": null,
+    "user": {
+      "id": "string",
+      "email": "string",
+      "firstName": "string",
+      "lastName": "string",
+      "isSuperAdmin": boolean,
+      "tenants": [
+        {
+          "tenantId": "string",
+          "tenantName": "string",
+          "tenantSlug": "string",
+          "role": "tenant_admin",
+          "isActive": true,
+          "invitedAt": "ISO8601"
+        }
+      ],
+      "currentTenantId": "string?",
+      "createdAt": "ISO8601",
+      "updatedAt": "ISO8601"
+    }
+  }
+
+Super Admin — Tenants
+GET /api/super-admin/tenants
+- Response: Tenant[]
+
+GET /api/super-admin/tenants/:id
+- Params: id
+- Response: Tenant | null
+
+POST /api/super-admin/tenants
+- Body (JSON):
+  {
+    "slug": "lowercase-dash-slug",
+    "title": "string",
+    "adminLogin": "string (optional)",
+    "adminPassword": "string(min 6, optional)",
+    "adminEmail": "email (optional)",
+    "adminFirstName": "string (optional)",
+    "adminLastName": "string (optional)"
+  }
+- Response: Tenant
+
+PATCH /api/super-admin/tenants/:id
+- Params: id
+- Body (JSON):
+  {
+    "slug": "lowercase-dash-slug (optional)",
+    "title": "string (optional)"
+  }
+- Response: Tenant | null
+
+DELETE /api/super-admin/tenants/:id
+- Params: id
+- Response: {"deleted": number}
+
+POST /api/super-admin/tenants/:id/admins
+- Params: id
+- Body (JSON):
+  {
+    "login": "string",
+    "password": "string(min 6)",
+    "email": "email (optional)",
+    "firstName": "string",
+    "lastName": "string"
+  }
+- Response: Created admin object
+
+Tenant — Departments
+GET /api/tenant/departments
+- Response: DepartmentRecord[]
+
+GET /api/tenant/departments/:id
+- Params: id
+- Response: DepartmentRecord | null
+
+POST /api/tenant/departments
+- Body:
+  {
+    "title_en": "string",
+    "title_ru": "string",
+    "title_tr": "string",
+    "status": true
+  }
+- Response: DepartmentRecord
+
+PATCH /api/tenant/departments/:id
+- Params: id
+- Body:
+  {
+    "title_en": "string (optional)",
+    "title_ru": "string (optional)",
+    "title_tr": "string (optional)",
+    "status": true
+  }
+- Response: DepartmentRecord | null
+
+DELETE /api/tenant/departments/:id
+- Params: id
+- Response: {"deleted": number}
+
+Tenant — Project Codes
+GET /api/tenant/project-codes
+GET /api/tenant/project-codes/:id
+POST /api/tenant/project-codes
+- Body:
+  {
+    "code": "string",
+    "title_en": "string",
+    "title_ru": "string",
+    "title_tr": "string",
+    "client": "string (optional)",
+    "startDate": "ISO8601 (optional)",
+    "endDate": "ISO8601 (optional)",
+    "headOfProject": "string (optional)",
+    "status": true
+  }
+PATCH /api/tenant/project-codes/:id
+- Body: same fields optional
+DELETE /api/tenant/project-codes/:id
+- Response for all: item or {"deleted": number}
+
+Tenant — Employees
+GET /api/tenant/employees
+- Query (optional): safetyRole, department, status, workLocation, search
+- Response: EmployeeRecord[]
+
+GET /api/tenant/employees/:id
+- Params: id
+- Response: EmployeeRecord | null
+
+POST /api/tenant/employees
+- Body:
+  {
+    "employeeNumber": "string",
+    "firstName": "string",
+    "lastName": "string",
+    "email": "email",
+    "phone": "string",
+    "position": "string",
+    "department": "string",
+    "hireDate": "ISO8601",
+    "status": "active|on_leave|suspended|terminated",
+    "avatar": "string (optional)",
+    "safetyRole": "worker|safety_team|inspector|head_of_safety (optional)",
+    "lastTrainingDate": "ISO8601 (optional)",
+    "trainingExpiryDate": "ISO8601 (optional)",
+    "certifications": ["string", "..."],
+    "incidentCount": 0,
+    "observationsSubmitted": 0,
+    "emergencyContact": {
+      "name": "string",
+      "relationship": "string",
+      "phone": "string"
+    },
+    "workLocation": "string",
+    "shift": "day|night|rotating (optional)",
+    "licenseId": "string (optional)",
+    "region": "string (optional)",
+    "assignedSites": 0,
+    "lastAuditDate": "ISO8601 (optional)",
+    "expertise": "string (optional)",
+    "certificationLevel": "string (optional)",
+    "yearsOfExperience": 0
+  }
+- Response: EmployeeRecord
+
+PATCH /api/tenant/employees/:id
+- Params: id
+- Body: any subset of POST fields
+- Response: EmployeeRecord | null
+
+DELETE /api/tenant/employees/:id
+- Params: id
+- Response: {"deleted": number}
+
+Tenant — Observations
+GET /api/tenant/observations
+- Query (optional): projectCode, department, nonconformityType, task, upperCategory, lowerCategory, startDate, endDate
+- Response: ObservationRecord[]
+
+GET /api/tenant/observations/:id
+- Params: id
+- Response: ObservationRecord | null
+
+POST /api/tenant/observations
+- Body:
+  {
+    "id": "string (optional, autogenerated if blank)",
+    "projectCode": "string",
+    "nameSurname": "string",
+    "department": "string",
+    "nonconformityType": "string",
+    "observationDate": "ISO8601",
+    "riskLevel": 1,
+    "status": "string",
+    "deadline": "ISO8601",
+    "task": "string (optional)",
+    "upperCategory": "string (optional)",
+    "lowerCategory": "string (optional)",
+    "description_en": "string (optional)",
+    "description_ru": "string (optional)",
+    "description_tr": "string (optional)"
+  }
+- Response: ObservationRecord
+
+PATCH /api/tenant/observations/:id
+- Params: id
+- Body: any subset of POST fields except id
+- Response: ObservationRecord | null
+
+DELETE /api/tenant/observations/:id
+- Params: id
+- Response: {"deleted": number}
+
+Tenant — Settings
+GET /api/tenant/settings
+- Response: SettingsRecord
+
+PATCH /api/tenant/settings
+- Body:
+  {
+    "organizationName": "string",
+    "defaultLocale": "string",
+    "timezone": "string",
+    "logo": "string",
+    "primaryColor": "string",
+    "secondaryColor": "string",
+    "favicon": "string",
+    "emailNotifications": true,
+    "smsNotifications": false,
+    "pushNotifications": true,
+    "notificationTypes": { "key": true },
+    "passwordMinLength": 8,
+    "passwordRequireUppercase": true,
+    "passwordRequireNumbers": true,
+    "passwordRequireSymbols": false,
+    "sessionTimeout": 3600,
+    "twoFactorEnabled": false,
+    "theme": "light|dark|custom",
+    "darkMode": false
+  }
+- Response: SettingsRecord
+
+Tenant — Admin Users
+GET /api/tenant/admin-users
+GET /api/tenant/admin-users/:id
+POST /api/tenant/admin-users
+- Body:
+  {
+    "email": "email",
+    "firstName": "string",
+    "lastName": "string",
+    "role": "string",
+    "department": "string (optional)",
+    "position": "string (optional)",
+    "isActive": true,
+    "permissions": ["string"]
+  }
+PATCH /api/tenant/admin-users/:id
+- Body: same fields optional
+DELETE /api/tenant/admin-users/:id
+- Response patterns as above
+
+Tenant — Users
+GET /api/tenant/users
+- Query (optional): role, department, isActive (true|false), search
+- Response: UserRecord[] (password omitted where applicable)
+
+GET /api/tenant/users/stats
+- Response:
+  {
+    "totalUsers": number,
+    "activeUsers": number,
+    "inactiveUsers": number,
+    "roleDistribution": { "admin": number, "...": number },
+    "departmentDistribution": { "Sales": number, "...": number },
+    "recentlyActive": number
+  }
+
+GET /api/tenant/users/:id
+- Params: id
+- Response: UserRecord | null (password omitted)
+
+POST /api/tenant/users
+- Body:
+  {
+    "username": "string",
+    "password": "string",
+    "email": "email",
+    "firstName": "string",
+    "lastName": "string",
+    "phone": "string (optional)",
+    "role": "admin|manager|user|viewer",
+    "department": "string (optional)",
+    "position": "string (optional)",
+    "avatar": "string (optional)",
+    "isActive": true,
+    "lastLogin": "ISO8601 (optional)"
+  }
+- Response: Created user without password
+
+PATCH /api/tenant/users/:id
+- Params: id
+- Body: any subset of POST fields
+- Response: Updated user without password
+
+DELETE /api/tenant/users/:id
+- Params: id
+- Response: {"deleted": number, "message": "User deleted successfully"}
+
+Tenant — Training
+GET /api/tenant/training
+- Query (optional): type, status, department, mandatory (true|false)
+- Response: TrainingRecord[]
+
+GET /api/tenant/training/:id
+- Params: id
+- Response: TrainingRecord | null
+
+POST /api/tenant/training
+- Body:
+  {
+    "title": "string",
+    "description": "string",
+    "type": "string",
+    "status": "string",
+    "instructor": "string",
+    "department": "string (optional)",
+    "location": "string",
+    "startDate": "ISO8601",
+    "endDate": "ISO8601",
+    "duration": 0,
+    "capacity": 0,
+    "enrolled": 0,
+    "attendees": [],
+    "materials": ["string"],
+    "certificate": true,
+    "mandatory": true,
+    "completionRate": 0
+  }
+- Response: TrainingRecord
+
+PATCH /api/tenant/training/:id
+- Params: id
+- Body: any subset of POST fields
+- Response: TrainingRecord | null
+
+DELETE /api/tenant/training/:id
+- Params: id
+- Response: {"deleted": number}
+
