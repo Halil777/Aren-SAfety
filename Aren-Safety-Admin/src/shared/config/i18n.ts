@@ -5,6 +5,20 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 const resources = {
   en: {
     translation: {
+      login: {
+        title: 'Safety Management Platform',
+        logo: 'Safety',
+        tip: 'Tip',
+        credentials: 'Use superadmin@gmail.com / superAdmin123!',
+        form: {
+          login: 'Login',
+          loginRequired: 'Please enter your login',
+          password: 'Password',
+          passwordRequired: 'Please enter your password',
+          passwordPlaceholder: 'Enter password',
+          signIn: 'Sign In',
+        },
+      },
       common: {
         buttons: {
           excel: 'Excel',
@@ -227,6 +241,20 @@ const resources = {
   },
   ru: {
     translation: {
+      login: {
+        title: 'Платформа управления безопасностью',
+        logo: 'Безопасность',
+        tip: 'Подсказка',
+        credentials: 'Используйте superadmin@gmail.com / superAdmin123!',
+        form: {
+          login: 'Логин',
+          loginRequired: 'Пожалуйста, введите логин',
+          password: 'Пароль',
+          passwordRequired: 'Пожалуйста, введите пароль',
+          passwordPlaceholder: 'Введите пароль',
+          signIn: 'Войти',
+        },
+      },
       common: {
         buttons: {
           excel: 'Excel',
@@ -449,6 +477,20 @@ const resources = {
   },
   tr: {
     translation: {
+      login: {
+        title: 'Güvenlik Yönetim Platformu',
+        logo: 'Güvenlik',
+        tip: 'İpucu',
+        credentials: 'superadmin@gmail.com / superAdmin123! kullanın',
+        form: {
+          login: 'Kullanıcı Adı',
+          loginRequired: 'Lütfen kullanıcı adınızı girin',
+          password: 'Şifre',
+          passwordRequired: 'Lütfen şifrenizi girin',
+          passwordPlaceholder: 'Şifrenizi girin',
+          signIn: 'Giriş Yap',
+        },
+      },
       common: {
         buttons: {
           excel: 'Excel',

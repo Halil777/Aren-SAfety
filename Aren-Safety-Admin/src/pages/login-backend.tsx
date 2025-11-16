@@ -4,9 +4,10 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Card, Form, Input, Button, Space, Alert, Divider } from 'antd';
-import { LogIn, User, Lock } from 'lucide-react';
+import { Card, Form, Input, Button, Space, Alert, Divider, Select } from 'antd';
+import { LogIn, User, Lock, Globe } from 'lucide-react';
 import styled from 'styled-components';
+import { useTranslation } from 'react-i18next';
 import { useLoginMutation } from '@/features/auth/api';
 
 const LoginContainer = styled.div`
@@ -48,10 +49,22 @@ const Logo = styled.div`
   background-clip: text;
 `;
 
+const LanguageSelector = styled.div`
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+`;
+
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const { mutateAsync, isPending } = useLoginMutation();
   const [error, setError] = useState('');
+
+  const handleLanguageChange = (lang: string) => {
+    i18n.changeLanguage(lang);
+  };
 
   const handleLogin = async (values: { login: string; password: string }) => {
     setError('');
@@ -83,16 +96,31 @@ export default function LoginPage() {
 
   return (
     <LoginContainer>
-      <LoginCard title="Safety Management Platform">
-        <Logo>Safety</Logo>
+      <LanguageSelector>
+        <Select
+          value={i18n.language}
+          onChange={handleLanguageChange}
+          style={{ width: 160 }}
+          size="large"
+          suffixIcon={<Globe size={16} />}
+          options={[
+            { value: 'en', label: 'English' },
+            { value: 'ru', label: 'Русский' },
+            { value: 'tr', label: 'Türkçe' },
+          ]}
+        />
+      </LanguageSelector>
+
+      <LoginCard title={t('login.title', 'Safety Management Platform')}>
+        <Logo>{t('login.logo', 'Safety')}</Logo>
 
         <Form layout="vertical" onFinish={handleLogin}>
           <Form.Item
-            label="Login"
+            label={t('login.form.login', 'Login')}
             name="login"
             initialValue="superadmin@gmail.com"
             rules={[
-              { required: true, message: 'Please enter your login' },
+              { required: true, message: t('login.form.loginRequired', 'Please enter your login') },
             ]}
           >
             <Input
@@ -104,14 +132,14 @@ export default function LoginPage() {
           </Form.Item>
 
           <Form.Item
-            label="Password"
+            label={t('login.form.password', 'Password')}
             name="password"
             initialValue="superAdmin123!"
-            rules={[{ required: true, message: 'Please enter your password' }]}
+            rules={[{ required: true, message: t('login.form.passwordRequired', 'Please enter your password') }]}
           >
             <Input.Password
               prefix={<Lock size={16} />}
-              placeholder="Enter password"
+              placeholder={t('login.form.passwordPlaceholder', 'Enter password')}
               size="large"
               autoComplete="current-password"
             />
@@ -136,14 +164,14 @@ export default function LoginPage() {
               block
               loading={isPending}
             >
-              Sign In
+              {t('login.form.signIn', 'Sign In')}
             </Button>
           </Form.Item>
         </Form>
 
-        <Divider>Tip</Divider>
+        <Divider>{t('login.tip', 'Tip')}</Divider>
         <Space direction="vertical" style={{ width: '100%' }}>
-          <Alert type="info" message="Use superadmin@gmail.com / superAdmin123!" showIcon />
+          <Alert type="info" message={t('login.credentials', 'Use superadmin@gmail.com / superAdmin123!')} showIcon />
           <Alert
             type="warning"
             message={`API: ${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}`}
