@@ -65,7 +65,19 @@ export default function LoginPage() {
         navigate('/');
       }
     } catch (e: any) {
-      setError(e?.response?.data?.message || 'Invalid email or password');
+      console.error('Login error:', e);
+      console.error('Error response:', e?.response);
+      console.error('Error message:', e?.message);
+
+      // Network error (no response from server)
+      if (!e?.response) {
+        setError(`Network error: ${e?.message || 'Cannot connect to server. Please check if the backend is running.'}`);
+        return;
+      }
+
+      // Server error
+      const errorMessage = e?.response?.data?.message || e?.message || 'Invalid email or password';
+      setError(`${errorMessage} (Status: ${e?.response?.status || 'unknown'})`);
     }
   };
 
@@ -132,6 +144,12 @@ export default function LoginPage() {
         <Divider>Tip</Divider>
         <Space direction="vertical" style={{ width: '100%' }}>
           <Alert type="info" message="Use superadmin@gmail.com / superAdmin123!" showIcon />
+          <Alert
+            type="warning"
+            message={`API: ${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}`}
+            showIcon
+            style={{ fontSize: 11 }}
+          />
         </Space>
       </LoginCard>
     </LoginContainer>
