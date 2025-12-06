@@ -1,0 +1,16 @@
+[
+  {
+    "id": "c33fe414-40a6-40c0-a114-aecddf371ad3",
+    "username": "Halil",
+    "password": "Halil123!",
+    "email": "microsoft7779@gmail.com",
+    "firstName": "Halil ",
+    "lastName": "Gayypov",
+    "phone": "+79115098859",
+    "role": "user",
+    "position": "Inspektor",
+    "isActive": true,
+    "createdAt": "2025-12-06T10:50:20.816Z",
+    "updatedAt": "2025-12-06T10:50:20.816Z"
+  }
+]
