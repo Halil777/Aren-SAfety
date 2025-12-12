@@ -1,0 +1,32 @@
+import { Tenant } from '../tenants/tenant.entity';
+import { Project } from '../projects/project.entity';
+import { Department } from '../departments/department.entity';
+import { MobileRole } from './mobile-role';
+import { Observation } from '../observations/observation.entity';
+import { ObservationMedia } from '../observations/observationMedia.entity';
+import { Company } from '../companies/company.entity';
+export declare class MobileAccount {
+    id: string;
+    fullName: string;
+    phoneNumber: string;
+    email?: string | null;
+    login: string;
+    password: string;
+    profession?: string | null;
+    role: MobileRole;
+    isActive: boolean;
+    tenantId: string;
+    tenant: Tenant;
+    departmentId?: string | null;
+    department?: Department | null;
+    companyId?: string | null;
+    company?: Company | null;
+    projects: Project[];
+    createdAt: Date;
+    updatedAt: Date;
+    validatePassword(password: string): Promise<boolean>;
+    setPassword(raw: string): Promise<void>;
+    createdObservations: Observation[];
+    assignedObservations: Observation[];
+    uploadedMedia: ObservationMedia[];
+}

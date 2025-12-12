@@ -1,0 +1,36 @@
+import { Repository } from 'typeorm';
+import { Observation } from './observation.entity';
+import { ObservationMedia } from './observationMedia.entity';
+import { CreateObservationDto } from './dto/create-observation.dto';
+import { UpdateObservationDto } from './dto/update-observation.dto';
+import { CreateObservationMediaDto } from './dto/create-observation-media.dto';
+import { MobileAccount } from '../mobile-accounts/mobile-account.entity';
+import { Project } from '../projects/project.entity';
+import { Department } from '../departments/department.entity';
+import { Category } from '../categories/category.entity';
+import { Subcategory } from '../subcategories/subcategory.entity';
+import { MobileRole } from '../mobile-accounts/mobile-role';
+import { Company } from '../companies/company.entity';
+export declare class ObservationsService {
+    private readonly observationsRepository;
+    private readonly mediaRepository;
+    private readonly accountsRepository;
+    private readonly projectsRepository;
+    private readonly departmentsRepository;
+    private readonly categoriesRepository;
+    private readonly subcategoriesRepository;
+    private readonly companiesRepository;
+    constructor(observationsRepository: Repository<Observation>, mediaRepository: Repository<ObservationMedia>, accountsRepository: Repository<MobileAccount>, projectsRepository: Repository<Project>, departmentsRepository: Repository<Department>, categoriesRepository: Repository<Category>, subcategoriesRepository: Repository<Subcategory>, companiesRepository: Repository<Company>);
+    create(tenantId: string, creatorId: string, dto: CreateObservationDto): Promise<Observation>;
+    findAllForTenant(tenantId: string): Promise<Observation[]>;
+    findForMobile(accountId: string, role: MobileRole): Promise<Observation[]>;
+    updateStatus(tenantId: string, accountId: string | null, role: MobileRole | null, id: string, dto: UpdateObservationDto): Promise<Observation>;
+    addMedia(tenantId: string, observationId: string, dto: CreateObservationMediaDto): Promise<ObservationMedia>;
+    private ensureAccount;
+    private findProject;
+    private findDepartment;
+    private findCategory;
+    private findSubcategory;
+    private parseDate;
+    private findCompany;
+}
