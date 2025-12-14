@@ -5,7 +5,7 @@ node_modules/
 .env
 
 # Build
-# dist/
+dist/
 
 # IDE
 .vscode/

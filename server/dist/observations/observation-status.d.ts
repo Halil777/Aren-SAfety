@@ -1,7 +1,0 @@
-export declare enum ObservationStatus {
-    NEW = "NEW",
-    SEEN_BY_SUPERVISOR = "SEEN_BY_SUPERVISOR",
-    IN_PROGRESS = "IN_PROGRESS",
-    FIXED_PENDING_CHECK = "FIXED_PENDING_CHECK",
-    CLOSED = "CLOSED"
-}
