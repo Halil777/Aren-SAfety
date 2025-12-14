@@ -294,7 +294,15 @@ const handleOpenDrawer = (row?: MobileUser | Supervisor) => {
                 {t('common.cancel', { defaultValue: 'Cancel' })}
               </Button>
             </div>
-            <div className="h-[calc(100vh-64px)] overflow-y-auto p-4">
+            <div className="relative h-[calc(100vh-64px)] overflow-y-auto p-4">
+              {isSaving ? (
+                <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-primary" />
+                    {t('common.loading', { defaultValue: 'Saving...' })}
+                  </div>
+                </div>
+              ) : null}
               <form className="space-y-4" onSubmit={handleSubmit}>
                 <TwoCol>
                   <Field

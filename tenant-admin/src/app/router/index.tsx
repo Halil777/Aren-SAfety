@@ -10,6 +10,7 @@ import { CompaniesPage } from '@/features/companies/pages/companies-page'
 import { SubcategoriesPage } from '@/features/subcategories/pages/subcategories-page'
 import { TypesPage } from '@/features/types/pages/types-page'
 import { SupervisorsPage } from '@/features/supervisors/pages/supervisors-page'
+import { LocationsPage } from '@/features/locations/pages/locations-page'
 import { UsersListPage } from '@/features/users/pages/users-list-page'
 import { LoginPage } from '@/features/auth/pages/login-page'
 import { SupportPage } from '@/features/support/pages/support-page'
@@ -63,6 +64,10 @@ export const appRouter = createBrowserRouter([
       {
         path: 'companies',
         element: <CompaniesPage />,
+      },
+      {
+        path: 'locations',
+        element: <LocationsPage />,
       },
       {
         path: 'subcategories',

@@ -1,5 +1,5 @@
 import type React from 'react'
-import { ShieldPlus, Pencil } from 'lucide-react'
+import { ShieldPlus, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/shared/ui/card'
@@ -9,6 +9,7 @@ import { useProjectsQuery } from '@/features/projects/api/hooks'
 import { useDepartmentsQuery } from '@/features/departments/api/hooks'
 import {
   useCreateSupervisorMutation,
+  useDeleteSupervisorMutation,
   useSupervisorsQuery,
   useUpdateSupervisorMutation,
 } from '../api/hooks'
@@ -21,6 +22,7 @@ export function SupervisorsPage() {
   const supervisorsQuery = useSupervisorsQuery()
   const createMutation = useCreateSupervisorMutation()
   const updateMutation = useUpdateSupervisorMutation()
+  const deleteMutation = useDeleteSupervisorMutation()
 
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -48,6 +50,14 @@ export function SupervisorsPage() {
         ? s.projectIds.filter(pid => pid !== id)
         : [...s.projectIds, id],
     }))
+  }
+
+  const handleDelete = async (id: string) => {
+    const confirmed = window.confirm(
+      t('common.confirmDelete', { defaultValue: 'Are you sure you want to delete?' }),
+    )
+    if (!confirmed) return
+    await deleteMutation.mutateAsync(id)
   }
 
   const handleOpenDrawer = (row?: Supervisor) => {
@@ -131,7 +141,7 @@ export function SupervisorsPage() {
                   <Th>{t('supervisors.table.department', { defaultValue: 'Department' })}</Th>
                   <Th>{t('supervisors.table.projects', { defaultValue: 'Projects' })}</Th>
                   <Th>{t('supervisors.table.status', { defaultValue: 'Status' })}</Th>
-                  <Th className="w-24 text-center">
+                  <Th className="w-28 text-center">
                     {t('supervisors.table.actions', { defaultValue: 'Actions' })}
                   </Th>
                 </tr>
@@ -183,15 +193,27 @@ export function SupervisorsPage() {
                           : t('common.inactive', { defaultValue: 'Inactive' })}
                       </Td>
                       <Td className="text-center">
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="ghost"
-                          aria-label={t('common.edit', { defaultValue: 'Edit' })}
-                          onClick={() => handleOpenDrawer(row)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            aria-label={t('common.edit', { defaultValue: 'Edit' })}
+                            onClick={() => handleOpenDrawer(row)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            aria-label={t('common.delete', { defaultValue: 'Delete' })}
+                            onClick={() => handleDelete(row.id)}
+                            disabled={deleteMutation.isPending}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </Td>
                     </tr>
                   ))

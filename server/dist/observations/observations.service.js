@@ -48,7 +48,9 @@ let ObservationsService = class ObservationsService {
         const project = await this.findProject(dto.projectId, tenantId);
         const department = await this.findDepartment(dto.departmentId, tenantId);
         const category = await this.findCategory(dto.categoryId, tenantId);
-        const subcategory = await this.findSubcategory(dto.subcategoryId, tenantId, category.id);
+        const subcategory = dto.subcategoryId
+            ? await this.findSubcategory(dto.subcategoryId, tenantId, category.id)
+            : null;
         const deadline = this.parseDate(dto.deadline, 'deadline');
         const observation = this.observationsRepository.create({
             ...dto,
@@ -60,10 +62,21 @@ let ObservationsService = class ObservationsService {
             projectId: project.id,
             departmentId: department.id,
             categoryId: category.id,
-            subcategoryId: subcategory.id,
+            subcategoryId: subcategory?.id ?? null,
             companyId: company?.id ?? null,
         });
-        return this.observationsRepository.save(observation);
+        const saved = await this.observationsRepository.save(observation);
+        if (dto.media?.length) {
+            const mediaEntities = dto.media.map(m => this.mediaRepository.create({
+                observationId: saved.id,
+                uploadedByUserId: creator.id,
+                url: m.url,
+                type: m.type,
+                isCorrective: m.isCorrective ?? false,
+            }));
+            await this.mediaRepository.insert(mediaEntities);
+        }
+        return saved;
     }
     findAllForTenant(tenantId) {
         return this.observationsRepository.find({
@@ -85,11 +98,50 @@ let ObservationsService = class ObservationsService {
         const where = role === mobile_role_1.MobileRole.USER
             ? { createdByUserId: accountId }
             : { supervisorId: accountId };
-        return this.observationsRepository.find({
+        const data = await this.observationsRepository.find({
             where,
-            relations: ['project', 'department', 'category', 'subcategory', 'company'],
+            relations: [
+                'project',
+                'department',
+                'category',
+                'subcategory',
+                'company',
+                'supervisor',
+                'createdBy',
+                'media',
+            ],
             order: { createdAt: 'DESC' },
         });
+        return data.map(o => this.mapForMobile(o));
+    }
+    async findOneForMobile(accountId, role, id) {
+        const observation = await this.observationsRepository.findOne({
+            where: { id },
+            relations: [
+                'project',
+                'department',
+                'category',
+                'subcategory',
+                'company',
+                'supervisor',
+                'createdBy',
+                'media',
+            ],
+        });
+        if (!observation) {
+            throw new common_1.NotFoundException('Observation not found');
+        }
+        if ((role === mobile_role_1.MobileRole.USER && observation.createdByUserId !== accountId) ||
+            (role === mobile_role_1.MobileRole.SUPERVISOR && observation.supervisorId !== accountId)) {
+            throw new common_1.BadRequestException('Not allowed to view this observation');
+        }
+        if (role === mobile_role_1.MobileRole.SUPERVISOR && observation.status === observation_status_1.ObservationStatus.NEW) {
+            const seenAt = new Date();
+            await this.observationsRepository.update({ id: observation.id }, { status: observation_status_1.ObservationStatus.SEEN_BY_SUPERVISOR, supervisorSeenAt: seenAt });
+            observation.status = observation_status_1.ObservationStatus.SEEN_BY_SUPERVISOR;
+            observation.supervisorSeenAt = seenAt;
+        }
+        return this.mapForMobile(observation);
     }
     async updateStatus(tenantId, accountId, role, id, dto) {
         const observation = await this.observationsRepository.findOne({
@@ -143,6 +195,56 @@ let ObservationsService = class ObservationsService {
             observationId,
         });
         return this.mediaRepository.save(media);
+    }
+    async answerObservation(tenantId, accountId, role, id, dto) {
+        if (role !== mobile_role_1.MobileRole.SUPERVISOR) {
+            throw new common_1.ForbiddenException('Only supervisors can answer');
+        }
+        const observation = await this.observationsRepository.findOne({
+            where: { id, tenantId },
+            relations: ['media'],
+        });
+        if (!observation) {
+            throw new common_1.NotFoundException('Observation not found');
+        }
+        if (observation.supervisorId !== accountId) {
+            throw new common_1.ForbiddenException('Not allowed to answer this observation');
+        }
+        const now = new Date();
+        if (dto.answer !== undefined) {
+            observation.supervisorAnswer = dto.answer;
+            observation.answeredAt = now;
+        }
+        observation.supervisorSeenAt ??= now;
+        if (observation.status !== observation_status_1.ObservationStatus.CLOSED) {
+            observation.status = observation_status_1.ObservationStatus.FIXED_PENDING_CHECK;
+            observation.fixedAt = observation.fixedAt ?? now;
+        }
+        await this.observationsRepository.save(observation);
+        if (dto.media?.length) {
+            const mediaEntities = dto.media.map(m => this.mediaRepository.create({
+                observationId: observation.id,
+                uploadedByUserId: accountId,
+                url: m.url,
+                type: m.type,
+                isCorrective: m.isCorrective ?? true,
+            }));
+            await this.mediaRepository.insert(mediaEntities);
+        }
+        const withRelations = await this.observationsRepository.findOne({
+            where: { id: observation.id },
+            relations: [
+                'project',
+                'department',
+                'category',
+                'subcategory',
+                'company',
+                'supervisor',
+                'createdBy',
+                'media',
+            ],
+        });
+        return this.mapForMobile(withRelations);
     }
     async ensureAccount(id, tenantId, role) {
         const account = await this.accountsRepository.findOne({
@@ -204,6 +306,41 @@ let ObservationsService = class ObservationsService {
             throw new common_1.NotFoundException('Company not found for tenant');
         }
         return company;
+    }
+    mapForMobile(observation) {
+        return {
+            id: observation.id,
+            workerFullName: observation.workerFullName,
+            workerProfession: observation.workerProfession,
+            riskLevel: observation.riskLevel,
+            description: observation.description,
+            deadline: observation.deadline,
+            createdAt: observation.createdAt,
+            status: observation.status,
+            projectId: observation.projectId,
+            departmentId: observation.departmentId,
+            categoryId: observation.categoryId,
+            subcategoryId: observation.subcategoryId,
+            supervisorId: observation.supervisorId,
+            createdByUserId: observation.createdByUserId,
+            companyId: observation.companyId,
+            projectName: observation.project?.name,
+            departmentName: observation.department?.name,
+            categoryName: observation.category?.categoryName,
+            subcategoryName: observation.subcategory?.subcategoryName,
+            companyName: observation.company ? observation.company.companyName : null,
+            supervisorName: observation.supervisor?.fullName,
+            createdByName: observation.createdBy?.fullName,
+            supervisorAnswer: observation.supervisorAnswer,
+            answeredAt: observation.answeredAt,
+            media: observation.media?.map(m => ({
+                id: m.id,
+                type: m.type,
+                url: m.url,
+                isCorrective: m.isCorrective,
+                uploadedByUserId: m.uploadedByUserId,
+            })) ?? [],
+        };
     }
 };
 exports.ObservationsService = ObservationsService;

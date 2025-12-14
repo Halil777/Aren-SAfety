@@ -21,15 +21,18 @@ const project_entity_1 = require("../projects/project.entity");
 const department_entity_1 = require("../departments/department.entity");
 const company_entity_1 = require("../companies/company.entity");
 const mobile_role_1 = require("./mobile-role");
+const mail_service_1 = require("../notifications/mail.service");
 let MobileAccountsService = class MobileAccountsService {
-    constructor(accountsRepository, projectsRepository, departmentsRepository, companiesRepository) {
+    constructor(accountsRepository, projectsRepository, departmentsRepository, companiesRepository, mailService) {
         this.accountsRepository = accountsRepository;
         this.projectsRepository = projectsRepository;
         this.departmentsRepository = departmentsRepository;
         this.companiesRepository = companiesRepository;
+        this.mailService = mailService;
     }
     async create(tenantId, dto) {
         await this.ensureLoginUnique(dto.login);
+        const plainPassword = dto.password;
         const projects = await this.findProjects(dto.projectIds, tenantId);
         const department = dto.departmentId
             ? await this.findDepartment(dto.departmentId, tenantId)
@@ -44,7 +47,17 @@ let MobileAccountsService = class MobileAccountsService {
             projects,
         });
         await account.setPassword(dto.password);
-        return this.accountsRepository.save(account);
+        const saved = await this.accountsRepository.save(account);
+        if (saved.email) {
+            await this.mailService.sendMobileAccountCredentials({
+                to: saved.email,
+                fullName: saved.fullName,
+                login: saved.login,
+                password: plainPassword,
+                role: saved.role,
+            });
+        }
+        return saved;
     }
     async findAll(tenantId, role) {
         return this.accountsRepository.find({
@@ -135,6 +148,33 @@ let MobileAccountsService = class MobileAccountsService {
             relations: ['projects'],
         });
     }
+    async findProfile(accountId, tenantId) {
+        const account = await this.accountsRepository.findOne({
+            where: { id: accountId, tenantId },
+            relations: ['projects', 'department', 'company'],
+        });
+        if (!account) {
+            throw new common_1.NotFoundException('Account not found');
+        }
+        return account;
+    }
+    async findAllSupervisorsForTenant(tenantId) {
+        return this.accountsRepository.find({
+            where: { tenantId, role: mobile_role_1.MobileRole.SUPERVISOR, isActive: true },
+            select: ['id', 'fullName'],
+            order: { fullName: 'ASC' },
+        });
+    }
+    async remove(tenantId, id) {
+        const account = await this.accountsRepository.findOne({
+            where: { id, tenantId, role: mobile_role_1.MobileRole.SUPERVISOR },
+        });
+        if (!account) {
+            throw new common_1.NotFoundException('Supervisor not found');
+        }
+        await this.accountsRepository.remove(account);
+        return { success: true };
+    }
 };
 exports.MobileAccountsService = MobileAccountsService;
 exports.MobileAccountsService = MobileAccountsService = __decorate([
@@ -146,6 +186,7 @@ exports.MobileAccountsService = MobileAccountsService = __decorate([
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
-        typeorm_2.Repository])
+        typeorm_2.Repository,
+        mail_service_1.MailService])
 ], MobileAccountsService);
 //# sourceMappingURL=mobile-accounts.service.js.map

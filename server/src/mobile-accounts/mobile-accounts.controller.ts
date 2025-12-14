@@ -5,6 +5,7 @@ import {
   Param,
   Patch,
   Post,
+  Delete,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -63,5 +64,10 @@ export class MobileAccountsController {
       ...dto,
       role: dto.role ?? MobileRole.SUPERVISOR,
     });
+  }
+
+  @Delete('supervisors/:id')
+  removeSupervisor(@Req() req: any, @Param('id') id: string) {
+    return this.accountsService.remove(req.user.userId, id);
   }
 }

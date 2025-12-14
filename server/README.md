@@ -47,11 +47,20 @@ DB_PORT=5432
 DB_USERNAME=postgres
 DB_PASSWORD=postgres
 DB_DATABASE=safety_platform
+# Alternatively, provide a full connection string
+# DATABASE_URL=postgresql://user:password@host:5432/database
+# DB_URL=postgresql://user:password@host:5432/database
+# Toggle SSL when using cloud-hosted PostgreSQL
+DB_SSL=false
+# Set to false when your provider uses self-signed certificates
+DB_SSL_REJECT_UNAUTHORIZED=true
 
 # JWT
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 JWT_EXPIRES_IN=7d
 ```
+
+If you see connection errors such as `read ECONNRESET` when using a hosted database, set `DB_SSL=true` and, if your provider uses a self-signed certificate, set `DB_SSL_REJECT_UNAUTHORIZED=false`.
 
 ## Database Setup
 
@@ -76,13 +85,14 @@ npm run build
 npm start
 ```
 
-The server will start on `http://localhost:3000`
+The server will start on `http://192.168.0.101:4000`
 
 ## API Endpoints
 
 ### Authentication
 
 #### Login (Tenant Admin)
+
 ```http
 POST /api/auth/login
 Content-Type: application/json
@@ -106,6 +116,7 @@ Response:
 ```
 
 #### Get Current User
+
 ```http
 GET /api/auth/me
 Authorization: Bearer <token>
@@ -121,6 +132,7 @@ Response:
 ### Tenants (Super Admin)
 
 #### Get All Tenants
+
 ```http
 GET /api/tenants
 
@@ -139,6 +151,7 @@ Response:
 ```
 
 #### Get Single Tenant
+
 ```http
 GET /api/tenants/:id
 
@@ -155,6 +168,7 @@ Response:
 ```
 
 #### Create Tenant
+
 ```http
 POST /api/tenants
 Content-Type: application/json
@@ -180,6 +194,7 @@ Response:
 ```
 
 #### Update Tenant
+
 ```http
 PATCH /api/tenants/:id
 Content-Type: application/json
@@ -201,6 +216,7 @@ Response:
 ```
 
 #### Delete Tenant
+
 ```http
 DELETE /api/tenants/:id
 
@@ -228,6 +244,7 @@ Response: 204 No Content
 ### Validation
 
 All DTOs use class-validator:
+
 - Email must be valid email format
 - Password must be at least 6 characters
 - Required fields are validated

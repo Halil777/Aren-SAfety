@@ -7,6 +7,7 @@ import { Task } from '../tasks/task.entity';
 import { Company } from '../companies/company.entity';
 import { MobileAccount } from '../mobile-accounts/mobile-account.entity';
 import { Observation } from '../observations/observation.entity';
+import { Location } from '../locations/location.entity';
 export declare class Project {
     id: string;
     name: string;
@@ -25,6 +26,7 @@ export declare class Project {
     companies: Company[];
     mobileAccounts: MobileAccount[];
     observations: Observation[];
+    locations: Location[];
     createdAt: Date;
     updatedAt: Date;
 }

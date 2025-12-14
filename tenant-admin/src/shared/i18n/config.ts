@@ -5,8 +5,8 @@ export const LANGUAGE_STORAGE_KEY = 'tenant-admin-language'
 
 export const supportedLanguages = [
   { code: 'en', label: 'English', shortLabel: 'EN' },
-  { code: 'tr', label: 'Türkçe', shortLabel: 'TR' },
-  { code: 'ru', label: 'Русский', shortLabel: 'RU' },
+  { code: 'tr', label: 'Turkish', shortLabel: 'TR' },
+  { code: 'ru', label: 'Russian', shortLabel: 'RU' },
 ]
 
 const resources = {
@@ -27,6 +27,7 @@ const resources = {
         projects: 'Projects',
         departments: 'Departments',
         companies: 'Companies',
+        locations: 'Locations',
         categories: 'Categories',
         subcategories: 'Subcategories',
         types: 'Types',
@@ -95,6 +96,25 @@ const resources = {
           projectPlaceholder: 'Select project',
           name: 'Company name',
           description: 'Description',
+        },
+      },
+      locations: {
+        actions: { add: 'Add Location' },
+        table: {
+          project: 'Project',
+          name: 'Location Name',
+          actions: 'Actions',
+          empty: 'No locations yet.',
+        },
+        form: {
+          editTitle: 'Edit Location',
+          createTitle: 'Add Location',
+          subtitle: 'Location details',
+          project: 'Project',
+          projectPlaceholder: 'Select project',
+          name: 'Location name',
+          save: 'Save changes',
+          create: 'Create',
         },
       },
       subcategories: {
@@ -169,6 +189,7 @@ const resources = {
       },
       common: {
         cancel: 'Cancel',
+        noData: 'No data available.',
       },
       tenant: {
         status: {
@@ -232,6 +253,19 @@ const resources = {
         },
         placeholder: 'Content coming soon.',
       },
+      dashboard: {
+        activeUsers: 'Active users',
+        activeUsersHelper: '{{supervisors}} supervisors active',
+        openObservations: 'Open observations',
+        closedObservationsHelper: '{{count}} closed',
+        supervisors: 'Assigned supervisors',
+        supervisorsHelper: 'Supervisors covering active projects.',
+        tenantActivity: 'Tenant activity',
+        tenantActivityDescription: 'Observations and tasks created per month.',
+        legendObservations: 'Observations',
+        legendTasks: 'Tasks',
+        emptyState: 'No activity yet.',
+      },
       support: {
         title: 'Contact support',
         description: 'Send a message to the super admin team.',
@@ -282,6 +316,7 @@ const resources = {
         projects: 'Projeler',
         departments: 'Departmanlar',
         companies: 'Sirketler',
+        locations: 'Lokasyonlar',
         categories: 'Kategoriler',
         subcategories: 'Alt kategoriler',
         types: 'Tipler',
@@ -486,18 +521,20 @@ const resources = {
         manage: 'Управление',
       },
       nav: {
-        dashboard: 'Панель',
-        users: 'Пользователи',
-        observations: 'Наблюдения',
-        tasks: 'Задачи',
-        supervisors: 'Руководители',
-        source: 'Источник',
-        projects: 'Проекты',
-        departments: 'Отделы',
-        categories: 'Категории',
-        subcategories: 'Подкатегории',
-        types: 'Типы',
-        subscription: 'Подписка',
+        dashboard: 'Dashboard',
+        users: 'Users',
+        observations: 'Observation',
+        tasks: 'Tasks',
+        supervisors: 'Supervisors',
+        source: 'Source',
+        projects: 'Projects',
+        departments: 'Departments',
+        companies: 'Companies',
+        locations: 'Locations',
+        categories: 'Categories',
+        subcategories: 'Subcategories',
+        types: 'Types',
+        subscription: 'Subscription',
       },
       categories: {
         tabs: {
@@ -725,3 +762,7 @@ void i18n.use(initReactI18next).init({
 })
 
 export default i18n
+
+
+
+

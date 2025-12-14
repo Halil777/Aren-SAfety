@@ -19,12 +19,16 @@ const observations_service_1 = require("./observations.service");
 const create_observation_dto_1 = require("./dto/create-observation.dto");
 const update_observation_dto_1 = require("./dto/update-observation.dto");
 const mobile_role_1 = require("../mobile-accounts/mobile-role");
+const answer_observation_dto_1 = require("./dto/answer-observation.dto");
 let MobileObservationsController = class MobileObservationsController {
     constructor(observationsService) {
         this.observationsService = observationsService;
     }
     list(req) {
         return this.observationsService.findForMobile(req.user.mobileAccountId, req.user.role);
+    }
+    getOne(req, id) {
+        return this.observationsService.findOneForMobile(req.user.mobileAccountId, req.user.role, id);
     }
     create(req, dto) {
         if (req.user.role !== mobile_role_1.MobileRole.USER) {
@@ -35,6 +39,9 @@ let MobileObservationsController = class MobileObservationsController {
     update(req, id, dto) {
         return this.observationsService.updateStatus(req.user.tenantId, req.user.mobileAccountId, req.user.role, id, dto);
     }
+    answer(req, id, dto) {
+        return this.observationsService.answerObservation(req.user.tenantId, req.user.mobileAccountId, req.user.role, id, dto);
+    }
 };
 exports.MobileObservationsController = MobileObservationsController;
 __decorate([
@@ -44,6 +51,14 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], MobileObservationsController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], MobileObservationsController.prototype, "getOne", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Req)()),
@@ -61,6 +76,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, update_observation_dto_1.UpdateObservationDto]),
     __metadata("design:returntype", void 0)
 ], MobileObservationsController.prototype, "update", null);
+__decorate([
+    (0, common_1.Post)(':id/answer'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, answer_observation_dto_1.AnswerObservationDto]),
+    __metadata("design:returntype", void 0)
+], MobileObservationsController.prototype, "answer", null);
 exports.MobileObservationsController = MobileObservationsController = __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('mobile-jwt')),
     (0, common_1.Controller)('api/mobile/observations'),

@@ -13,6 +13,7 @@ import { Company } from '../companies/company.entity';
 import { CreateMobileAccountDto } from './dto/create-mobile-account.dto';
 import { UpdateMobileAccountDto } from './dto/update-mobile-account.dto';
 import { MobileRole } from './mobile-role';
+import { MailService } from '../notifications/mail.service';
 
 @Injectable()
 export class MobileAccountsService {
@@ -25,10 +26,12 @@ export class MobileAccountsService {
     private readonly departmentsRepository: Repository<Department>,
     @InjectRepository(Company)
     private readonly companiesRepository: Repository<Company>,
+    private readonly mailService: MailService,
   ) {}
 
   async create(tenantId: string, dto: CreateMobileAccountDto) {
     await this.ensureLoginUnique(dto.login);
+    const plainPassword = dto.password;
 
     const projects = await this.findProjects(dto.projectIds, tenantId);
     const department = dto.departmentId
@@ -47,7 +50,19 @@ export class MobileAccountsService {
 
     await account.setPassword(dto.password);
 
-    return this.accountsRepository.save(account);
+    const saved = await this.accountsRepository.save(account);
+
+    if (saved.email) {
+      await this.mailService.sendMobileAccountCredentials({
+        to: saved.email,
+        fullName: saved.fullName,
+        login: saved.login,
+        password: plainPassword,
+        role: saved.role,
+      });
+    }
+
+    return saved;
   }
 
   async findAll(tenantId: string, role?: MobileRole) {
@@ -165,5 +180,18 @@ export class MobileAccountsService {
       select: ['id', 'fullName'],
       order: { fullName: 'ASC' },
     });
+  }
+
+  async remove(tenantId: string, id: string) {
+    const account = await this.accountsRepository.findOne({
+      where: { id, tenantId, role: MobileRole.SUPERVISOR },
+    });
+
+    if (!account) {
+      throw new NotFoundException('Supervisor not found');
+    }
+
+    await this.accountsRepository.remove(account);
+    return { success: true };
   }
 }

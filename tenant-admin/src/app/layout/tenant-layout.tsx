@@ -44,6 +44,7 @@ const navItems: NavItem[] = [
       { to: "/projects", labelKey: "nav.projects", icon: FolderKanban },
       { to: "/departments", labelKey: "nav.departments", icon: Building2 },
       { to: "/companies", labelKey: "nav.companies", icon: Factory },
+      { to: "/locations", labelKey: "nav.locations", icon: Building2 },
       { to: "/categories", labelKey: "nav.categories", icon: Layers },
       { to: "/subcategories", labelKey: "nav.subcategories", icon: GitBranch },
       { to: "/types", labelKey: "nav.types", icon: Tag },
@@ -97,7 +98,7 @@ type SidebarProps = {
   onToggle: () => void;
   brandTitle: string;
   brandSubtitle: string;
-  translate: (key: string) => string;
+  translate: (key: string, options?: Record<string, unknown>) => string;
 };
 
 function Sidebar({
@@ -126,7 +127,7 @@ function Sidebar({
             </div>
             <div className="flex flex-col">
               <span className="text-base font-semibold leading-tight text-foreground">
-                {brandTitle}
+                {brandTitle || "ADMIN"}
               </span>
               <span className="text-xs text-muted-foreground">
                 {brandSubtitle}
@@ -171,8 +172,10 @@ function Sidebar({
                       aria-expanded={isOpen}
                     >
                       <item.icon className="h-5 w-5" />
-                      <span className="flex-1 text-left">
-                        {translate(item.labelKey)}
+                      <span className="flex-1 text-left uppercase">
+                        {translate(item.labelKey, {
+                          defaultValue: item.labelKey,
+                        })}
                       </span>
                       <ChevronDown
                         className={cn(
@@ -205,7 +208,11 @@ function Sidebar({
                           }
                         >
                           <child.icon className="h-4 w-4" />
-                          <span>{translate(child.labelKey)}</span>
+                          <span className="uppercase">
+                            {translate(child.labelKey, {
+                              defaultValue: child.labelKey,
+                            })}
+                          </span>
                         </NavLink>
                       ))}
                     </div>
@@ -230,7 +237,9 @@ function Sidebar({
                   }
                 >
                   <item.icon className="h-5 w-5" />
-                  <span>{translate(item.labelKey)}</span>
+                  <span className="uppercase">
+                    {translate(item.labelKey, { defaultValue: item.labelKey })}
+                  </span>
                 </NavLink>
               );
             })}

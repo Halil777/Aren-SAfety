@@ -20,6 +20,7 @@ const task_entity_1 = require("../tasks/task.entity");
 const company_entity_1 = require("../companies/company.entity");
 const mobile_account_entity_1 = require("../mobile-accounts/mobile-account.entity");
 const observation_entity_1 = require("../observations/observation.entity");
+const location_entity_1 = require("../locations/location.entity");
 let Project = class Project {
 };
 exports.Project = Project;
@@ -93,6 +94,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => observation_entity_1.Observation, observation => observation.project),
     __metadata("design:type", Array)
 ], Project.prototype, "observations", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => location_entity_1.Location, location => location.project),
+    __metadata("design:type", Array)
+], Project.prototype, "locations", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

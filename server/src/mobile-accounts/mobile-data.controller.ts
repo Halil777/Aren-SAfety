@@ -5,6 +5,7 @@ import { DepartmentsService } from '../departments/departments.service';
 import { CategoriesService } from '../categories/categories.service';
 import { CategoryType } from '../categories/category-type';
 import { MobileAccountsService } from './mobile-accounts.service';
+import { LocationsService } from '../locations/locations.service';
 
 @UseGuards(AuthGuard('mobile-jwt'))
 @Controller('api/mobile')
@@ -14,6 +15,7 @@ export class MobileDataController {
     private readonly departmentsService: DepartmentsService,
     private readonly categoriesService: CategoriesService,
     private readonly mobileAccountsService: MobileAccountsService,
+    private readonly locationsService: LocationsService,
   ) {}
 
   @Get('projects')
@@ -34,6 +36,16 @@ export class MobileDataController {
       req.user.tenantId,
     );
     return supervisors.map(s => ({ id: s.id, fullName: s.fullName }));
+  }
+
+  @Get('locations')
+  async getLocations(@Req() req: any) {
+    const locations = await this.locationsService.findAllForTenant(req.user.tenantId);
+    return locations.map(l => ({
+      id: l.id,
+      name: l.name,
+      projectId: l.projectId,
+    }));
   }
 
   @Get('categories')

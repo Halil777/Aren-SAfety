@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createSupervisor, fetchSupervisors, updateSupervisor } from './supervisors'
+import { createSupervisor, deleteSupervisor, fetchSupervisors, updateSupervisor } from './supervisors'
 import type { Supervisor, SupervisorInput } from '../types/supervisor'
 
 export function useSupervisorsQuery() {
@@ -29,6 +29,18 @@ export function useUpdateSupervisorMutation() {
     onSuccess: updated => {
       queryClient.setQueryData<Supervisor[]>(['supervisors'], old =>
         old ? old.map(item => (item.id === updated.id ? updated : item)) : [updated],
+      )
+    },
+  })
+}
+
+export function useDeleteSupervisorMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: deleteSupervisor,
+    onSuccess: (_, id) => {
+      queryClient.setQueryData<Supervisor[]>(['supervisors'], old =>
+        old ? old.filter(item => item.id !== id) : [],
       )
     },
   })

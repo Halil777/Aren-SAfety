@@ -17,6 +17,7 @@ import { Task } from '../tasks/task.entity';
 import { Company } from '../companies/company.entity';
 import { MobileAccount } from '../mobile-accounts/mobile-account.entity';
 import { Observation } from '../observations/observation.entity';
+import { Location } from '../locations/location.entity';
 
 @Entity('projects')
 export class Project {
@@ -76,6 +77,9 @@ export class Project {
 
   @OneToMany(() => Observation, observation => observation.project)
   observations: Observation[];
+
+  @OneToMany(() => Location, location => location.project)
+  locations: Location[];
 
   @CreateDateColumn()
   createdAt: Date;

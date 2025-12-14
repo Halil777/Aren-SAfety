@@ -21,6 +21,7 @@ exports.DepartmentsModule = DepartmentsModule = __decorate([
         imports: [typeorm_1.TypeOrmModule.forFeature([department_entity_1.Department, project_entity_1.Project])],
         controllers: [departments_controller_1.DepartmentsController],
         providers: [departments_service_1.DepartmentsService],
+        exports: [departments_service_1.DepartmentsService],
     })
 ], DepartmentsModule);
 //# sourceMappingURL=departments.module.js.map

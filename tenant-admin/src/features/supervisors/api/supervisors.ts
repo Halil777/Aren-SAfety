@@ -13,3 +13,7 @@ export async function createSupervisor(data: SupervisorInput) {
 export async function updateSupervisor(id: string, data: SupervisorInput) {
   return apiClient.patch<Supervisor>(ROUTES.SUPERVISORS.DETAIL(id), data)
 }
+
+export async function deleteSupervisor(id: string) {
+  return apiClient.delete<{ success: boolean }>(ROUTES.SUPERVISORS.DETAIL(id))
+}

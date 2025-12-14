@@ -18,6 +18,7 @@ import styled, { useTheme } from 'styled-components'
 import { PageHeader } from '@/shared/ui/PageHeader'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/Card'
 import { useStatistics } from '../api/useStatistics'
+import type { TenantStatus } from '../types'
 
 export function DashboardPage() {
   const { t } = useTranslation()
@@ -59,21 +60,46 @@ export function DashboardPage() {
     )
   }
 
-  const chartData = statistics.growthData.map(growth => {
-    const activeData = statistics.statusData.find(
-      s => s.month === growth.month && s.status === 'active'
-    )
-    const offlineData = statistics.statusData.find(
-      s => s.month === growth.month && s.status === 'offline'
-    )
+  const statusKeys: TenantStatus[] =
+    statistics.statusData.length > 0
+      ? Array.from(new Set(statistics.statusData.map(item => item.status)))
+      : ['active', 'suspended']
 
-    return {
-      month: growth.month,
-      total: growth.count,
-      active: activeData?.count || 0,
-      offline: offlineData?.count || 0,
-    }
+  const statusColorMap: Record<TenantStatus, string> = {
+    active: theme.colors.success,
+    trial: theme.colors.warning,
+    suspended: theme.colors.destructive,
+    disabled: theme.colors.muted,
+  }
+
+  const months = Array.from(
+    new Set([
+      ...statistics.growthData.map(item => item.month),
+      ...statistics.statusData.map(item => item.month),
+    ])
+  ).sort()
+
+  const chartData = months.map(month => {
+    const statusCounts = statusKeys.reduce<Record<string, number>>((acc, status) => {
+      const match = statistics.statusData.find(
+        item => item.month === month && item.status === status
+      )
+      acc[status] = match?.count ?? 0
+      return acc
+    }, {})
+
+    const total =
+      statistics.growthData.find(item => item.month === month)?.count ??
+      Object.values(statusCounts).reduce((sum, value) => sum + value, 0)
+
+    return { month, total, ...statusCounts }
   })
+
+  const statusSeries = statusKeys.map(status => ({
+    key: status,
+    label: t(`tenant.status.${status}`),
+    color: statusColorMap[status] ?? theme.colors.primary,
+  }))
 
   return (
     <PageStack>
@@ -106,24 +132,24 @@ export function DashboardPage() {
             <StatHelper>
               {statistics.total > 0
                 ? `${Math.round((statistics.active / statistics.total) * 100)}% ${t('dashboard.ofTotal')}`
-                : '0% of total'}
+                : `0% ${t('dashboard.ofTotal')}`}
             </StatHelper>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeaderRow>
-            <CardTitleSmall>{t('dashboard.offlineTenants')}</CardTitleSmall>
+            <CardTitleSmall>{t('dashboard.suspendedTenants')}</CardTitleSmall>
             <ShieldOff size={18} color={theme.colors.destructive} />
           </CardHeaderRow>
           <CardContent>
             <StatValue style={{ color: theme.colors.destructive }}>
-              {statistics.offline}
+              {statistics.suspended}
             </StatValue>
             <StatHelper>
               {statistics.total > 0
-                ? `${Math.round((statistics.offline / statistics.total) * 100)}% ${t('dashboard.ofTotal')}`
-                : '0% of total'}
+                ? `${Math.round((statistics.suspended / statistics.total) * 100)}% ${t('dashboard.ofTotal')}`
+                : `0% ${t('dashboard.ofTotal')}`}
             </StatHelper>
           </CardContent>
         </Card>
@@ -193,24 +219,18 @@ export function DashboardPage() {
                   }}
                 />
                 <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="active"
-                  stackId="1"
-                  stroke={theme.colors.success}
-                  fill={theme.colors.success}
-                  fillOpacity={0.6}
-                  name={t('dashboard.activeTenants')}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="offline"
-                  stackId="1"
-                  stroke={theme.colors.destructive}
-                  fill={theme.colors.destructive}
-                  fillOpacity={0.6}
-                  name={t('dashboard.offlineTenants')}
-                />
+                {statusSeries.map(series => (
+                  <Area
+                    key={series.key}
+                    type="monotone"
+                    dataKey={series.key}
+                    stackId="1"
+                    stroke={series.color}
+                    fill={series.color}
+                    fillOpacity={0.6}
+                    name={series.label}
+                  />
+                ))}
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -240,16 +260,14 @@ export function DashboardPage() {
                   }}
                 />
                 <Legend />
-                <Bar
-                  dataKey="active"
-                  fill={theme.colors.success}
-                  name={t('dashboard.activeTenants')}
-                />
-                <Bar
-                  dataKey="offline"
-                  fill={theme.colors.destructive}
-                  name={t('dashboard.offlineTenants')}
-                />
+                {statusSeries.map(series => (
+                  <Bar
+                    key={series.key}
+                    dataKey={series.key}
+                    fill={series.color}
+                    name={series.label}
+                  />
+                ))}
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

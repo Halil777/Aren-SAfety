@@ -53,6 +53,9 @@ let MobileAccountsController = class MobileAccountsController {
             role: dto.role ?? mobile_role_1.MobileRole.SUPERVISOR,
         });
     }
+    removeSupervisor(req, id) {
+        return this.accountsService.remove(req.user.userId, id);
+    }
 };
 exports.MobileAccountsController = MobileAccountsController;
 __decorate([
@@ -103,6 +106,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, update_mobile_account_dto_1.UpdateMobileAccountDto]),
     __metadata("design:returntype", void 0)
 ], MobileAccountsController.prototype, "updateSupervisor", null);
+__decorate([
+    (0, common_1.Delete)('supervisors/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], MobileAccountsController.prototype, "removeSupervisor", null);
 exports.MobileAccountsController = MobileAccountsController = __decorate([
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
     (0, common_1.Controller)('api'),

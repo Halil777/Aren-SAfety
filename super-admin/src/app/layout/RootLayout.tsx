@@ -300,6 +300,7 @@ const NavItemLink = styled(NavLink)`
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    text-transform: uppercase;
   }
 `
 

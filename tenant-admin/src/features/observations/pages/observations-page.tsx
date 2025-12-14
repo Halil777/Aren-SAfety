@@ -11,6 +11,7 @@ import { useCategoriesQuery } from '@/features/categories/api/hooks'
 import { useSubcategoriesQuery } from '@/features/subcategories/api/hooks'
 import { useMobileUsersQuery } from '@/features/users/api/hooks'
 import { useSupervisorsQuery } from '@/features/supervisors/api/hooks'
+import { useLocationsQuery } from '@/features/locations/api/hooks'
 import {
   useAddObservationMediaMutation,
   useCreateObservationMutation,
@@ -31,6 +32,7 @@ export function ObservationsPage() {
   const { t } = useTranslation()
   const projectsQuery = useProjectsQuery()
   const departmentsQuery = useDepartmentsQuery()
+  const locationsQuery = useLocationsQuery()
   const categoriesQuery = useCategoriesQuery('observation')
   const subcategoriesQuery = useSubcategoriesQuery('observation')
   const usersQuery = useMobileUsersQuery()
@@ -46,6 +48,7 @@ export function ObservationsPage() {
     createdByUserId: '',
     supervisorId: '',
     projectId: '',
+    locationId: '',
     departmentId: '',
     categoryId: '',
     subcategoryId: '',
@@ -67,6 +70,8 @@ export function ObservationsPage() {
 
   const filteredSubcategories =
     subcategoriesQuery.data?.filter(sub => sub.categoryId === formState.categoryId) ?? []
+  const filteredLocations =
+    locationsQuery.data?.filter(loc => loc.projectId === formState.projectId) ?? []
 
   const handleOpenDrawer = (row?: Observation) => {
     if (row) {
@@ -76,6 +81,7 @@ export function ObservationsPage() {
         createdByUserId: row.createdByUserId,
         supervisorId: row.supervisorId,
         projectId: row.projectId,
+        locationId: row.locationId,
         departmentId: row.departmentId,
         categoryId: row.categoryId,
         subcategoryId: row.subcategoryId,
@@ -99,6 +105,7 @@ export function ObservationsPage() {
         createdByUserId: '',
         supervisorId: '',
         projectId: '',
+        locationId: '',
         departmentId: '',
         categoryId: '',
         subcategoryId: '',
@@ -131,6 +138,7 @@ export function ObservationsPage() {
       createdByUserId: formState.createdByUserId,
       supervisorId: formState.supervisorId,
       projectId: formState.projectId,
+      locationId: formState.locationId,
       departmentId: formState.departmentId,
       categoryId: formState.categoryId,
       subcategoryId: formState.subcategoryId,
@@ -368,15 +376,16 @@ export function ObservationsPage() {
                     label={t('observations.form.project', { defaultValue: 'Project' })}
                     required
                   >
-                    <select
-                      required
-                      value={formState.projectId}
-                      onChange={e =>
-                        setFormState(s => ({
-                          ...s,
-                          projectId: e.target.value,
-                        }))
-                      }
+                  <select
+                    required
+                    value={formState.projectId}
+                    onChange={e =>
+                      setFormState(s => ({
+                        ...s,
+                        projectId: e.target.value,
+                        locationId: '',
+                      }))
+                    }
                       className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     >
                       <option value="">
@@ -414,6 +423,30 @@ export function ObservationsPage() {
                     </select>
                   </Field>
                 </TwoCol>
+
+                <Field
+                  label={t('observations.form.location', { defaultValue: 'Location' })}
+                  required
+                >
+                  <select
+                    required
+                    value={formState.locationId}
+                    onChange={e => setFormState(s => ({ ...s, locationId: e.target.value }))}
+                    disabled={!formState.projectId}
+                    className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  >
+                    <option value="">
+                      {t('observations.form.locationPlaceholder', {
+                        defaultValue: formState.projectId ? 'Select location' : 'Select project first',
+                      })}
+                    </option>
+                    {filteredLocations.map(location => (
+                      <option key={location.id} value={location.id}>
+                        {location.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
 
                 <TwoCol>
                   <Field
@@ -608,6 +641,7 @@ export function ObservationsPage() {
                       !formState.createdByUserId ||
                       !formState.supervisorId ||
                       !formState.projectId ||
+                      !formState.locationId ||
                       !formState.departmentId ||
                       !formState.categoryId ||
                       !formState.subcategoryId ||
@@ -636,6 +670,7 @@ type ObservationForm = {
   createdByUserId: string
   supervisorId: string
   projectId: string
+  locationId: string
   departmentId: string
   categoryId: string
   subcategoryId: string

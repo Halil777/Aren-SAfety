@@ -60,12 +60,12 @@ __decorate([
     __metadata("design:type", category_entity_1.Category)
 ], Observation.prototype, "category", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], Observation.prototype, "subcategoryId", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => subcategory_entity_1.Subcategory, subcategory => subcategory.observations, {
-        onDelete: 'CASCADE',
+        onDelete: 'SET NULL',
     }),
     __metadata("design:type", subcategory_entity_1.Subcategory)
 ], Observation.prototype, "subcategory", void 0);
@@ -135,6 +135,14 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
     __metadata("design:type", Date)
 ], Observation.prototype, "closedAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    __metadata("design:type", String)
+], Observation.prototype, "supervisorAnswer", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
+    __metadata("design:type", Date)
+], Observation.prototype, "answeredAt", void 0);
 __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)

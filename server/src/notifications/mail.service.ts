@@ -82,6 +82,84 @@ Aren Safety Company`;
     await this.sendMail(mailOptions);
   }
 
+  async sendMobileAccountCredentials(payload: {
+    to: string;
+    fullName?: string;
+    login: string;
+    password: string;
+    role?: string;
+  }) {
+    const { to, fullName, login, password, role } = payload;
+    if (!to) {
+      this.logger.warn('No recipient provided for mobile account credentials email');
+      return;
+    }
+
+    const name = fullName || 'коллега';
+    const roleRu = role === 'SUPERVISOR' ? 'Супервайзер' : 'Пользователь';
+    const roleEn = role === 'SUPERVISOR' ? 'Supervisor' : 'User';
+    const roleTr = role === 'SUPERVISOR' ? 'Süpervizör' : 'Kullanıcı';
+    const subject = 'Доступ / Access to Aren Safety mobile';
+
+    const ru = [
+      `Здравствуйте, ${name}!`,
+      '',
+      'Для вас создана учетная запись в мобильном приложении Aren Safety.',
+      '',
+      `Роль: ${roleRu}`,
+      `Логин: ${login}`,
+      `Пароль: ${password}`,
+      '',
+      'Пожалуйста, сохраните эти данные для входа в систему.',
+      '',
+      'Желаем успешной работы!',
+      '',
+      'С уважением,',
+      'Команда Aren Safety',
+    ].join('\n');
+
+    const en = [
+      `Hello ${name},`,
+      '',
+      'Your account has been successfully created in the Aren Safety mobile application.',
+      '',
+      `Role: ${roleEn}`,
+      `Login: ${login}`,
+      `Password: ${password}`,
+      '',
+      'Please keep these credentials for logging in.',
+      '',
+      'Wishing you productive work!',
+      '',
+      'Best regards,',
+      'Aren Safety Team',
+    ].join('\n');
+
+    const tr = [
+      `Merhaba ${name},`,
+      '',
+      'Aren Safety mobil uygulaması için kullanıcı hesabınız oluşturulmuştur.',
+      '',
+      `Rolünüz: ${roleTr}`,
+      `Kullanıcı adı: ${login}`,
+      `Şifre: ${password}`,
+      '',
+      'Lütfen giriş bilgilerinizi saklayınız.',
+      '',
+      'İyi çalışmalar dileriz.',
+      '',
+      'Saygılarımızla,',
+      'Aren Safety Ekibi',
+    ].join('\n');
+
+    await this.sendMail({
+      from: this.from,
+      to,
+      subject,
+      text: [ru, '', en, '', tr].join('\n'),
+    });
+  }
+
   private async sendMail(options: nodemailer.SendMailOptions) {
     try {
       await this.transporter.sendMail(options);

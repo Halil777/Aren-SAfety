@@ -8,6 +8,7 @@ export type ObservationStatus =
 export type Observation = {
   id: string
   tenantId: string
+  locationId: string
   projectId: string
   departmentId: string
   categoryId: string
@@ -31,12 +32,14 @@ export type Observation = {
   createdBy?: { id: string; fullName: string }
   supervisor?: { id: string; fullName: string }
   company?: { id: string; companyName: string } | null
+  location?: { id: string; name: string; projectId: string }
   createdAt?: string
 }
 
 export type ObservationInput = {
   createdByUserId: string
   projectId: string
+  locationId: string
   departmentId: string
   categoryId: string
   subcategoryId: string

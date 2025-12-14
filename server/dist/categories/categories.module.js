@@ -21,6 +21,7 @@ exports.CategoriesModule = CategoriesModule = __decorate([
         imports: [typeorm_1.TypeOrmModule.forFeature([category_entity_1.Category, project_entity_1.Project])],
         controllers: [categories_controller_1.CategoriesController],
         providers: [categories_service_1.CategoriesService],
+        exports: [categories_service_1.CategoriesService],
     })
 ], CategoriesModule);
 //# sourceMappingURL=categories.module.js.map

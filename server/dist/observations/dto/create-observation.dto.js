@@ -11,11 +11,28 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateObservationDto = void 0;
 const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
 const observation_status_1 = require("../observation-status");
+const observationMedia_entity_1 = require("../observationMedia.entity");
+class ObservationMediaInputDto {
+}
+__decorate([
+    (0, class_validator_1.IsEnum)(observationMedia_entity_1.ObservationMediaType),
+    __metadata("design:type", String)
+], ObservationMediaInputDto.prototype, "type", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ObservationMediaInputDto.prototype, "url", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], ObservationMediaInputDto.prototype, "isCorrective", void 0);
 class CreateObservationDto {
 }
 exports.CreateObservationDto = CreateObservationDto;
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], CreateObservationDto.prototype, "createdByUserId", void 0);
@@ -32,6 +49,7 @@ __decorate([
     __metadata("design:type", String)
 ], CreateObservationDto.prototype, "categoryId", void 0);
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
 ], CreateObservationDto.prototype, "subcategoryId", void 0);
@@ -69,4 +87,11 @@ __decorate([
     (0, class_validator_1.IsEnum)(observation_status_1.ObservationStatus),
     __metadata("design:type", String)
 ], CreateObservationDto.prototype, "status", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => ObservationMediaInputDto),
+    __metadata("design:type", Array)
+], CreateObservationDto.prototype, "media", void 0);
 //# sourceMappingURL=create-observation.dto.js.map

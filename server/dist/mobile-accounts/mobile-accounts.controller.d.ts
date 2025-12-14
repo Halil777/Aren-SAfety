@@ -10,4 +10,7 @@ export declare class MobileAccountsController {
     listSupervisors(req: any): Promise<import("./mobile-account.entity").MobileAccount[]>;
     updateUser(req: any, id: string, dto: UpdateMobileAccountDto): Promise<import("./mobile-account.entity").MobileAccount>;
     updateSupervisor(req: any, id: string, dto: UpdateMobileAccountDto): Promise<import("./mobile-account.entity").MobileAccount>;
+    removeSupervisor(req: any, id: string): Promise<{
+        success: boolean;
+    }>;
 }

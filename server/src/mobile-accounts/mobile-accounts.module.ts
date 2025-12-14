@@ -11,6 +11,8 @@ import { MobileDataController } from './mobile-data.controller';
 import { ProjectsModule } from '../projects/projects.module';
 import { DepartmentsModule } from '../departments/departments.module';
 import { CategoriesModule } from '../categories/categories.module';
+import { NotificationsModule } from '../notifications/notifications.module';
+import { LocationsModule } from '../locations/locations.module';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { CategoriesModule } from '../categories/categories.module';
     ProjectsModule,
     DepartmentsModule,
     CategoriesModule,
+    NotificationsModule,
+    LocationsModule,
   ],
   controllers: [MobileAccountsController, MobileProfileController, MobileDataController],
   providers: [MobileAccountsService],

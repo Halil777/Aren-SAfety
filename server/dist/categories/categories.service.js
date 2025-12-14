@@ -35,7 +35,7 @@ let CategoriesService = class CategoriesService {
     findAllForTenant(tenantId, type) {
         return this.categoriesRepository.find({
             where: { tenantId, type },
-            relations: ['project'],
+            relations: ['project', 'subcategories'],
             order: { createdAt: 'DESC' },
         });
     }

@@ -10,5 +10,12 @@ export declare class MailService {
     constructor(configService: ConfigService);
     sendSupportNotification(message: Message): Promise<void>;
     sendTenantStatusChange(tenant: Tenant, status: string): Promise<void>;
+    sendMobileAccountCredentials(payload: {
+        to: string;
+        fullName?: string;
+        login: string;
+        password: string;
+        role?: string;
+    }): Promise<void>;
     private sendMail;
 }

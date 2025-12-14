@@ -20,6 +20,7 @@ exports.ProjectsModule = ProjectsModule = __decorate([
         imports: [typeorm_1.TypeOrmModule.forFeature([project_entity_1.Project])],
         controllers: [projects_controller_1.ProjectsController],
         providers: [projects_service_1.ProjectsService],
+        exports: [projects_service_1.ProjectsService],
     })
 ], ProjectsModule);
 //# sourceMappingURL=projects.module.js.map

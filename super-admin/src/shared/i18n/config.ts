@@ -48,6 +48,16 @@ const resources = {
         },
         placeholder: 'Content coming soon.',
       },
+      dashboard: {
+        totalTenants: 'Total tenants',
+        activeTenants: 'Active tenants',
+        suspendedTenants: 'Suspended tenants',
+        ofTotal: 'of total',
+        allTenantAdmins: 'All tenant admins',
+        tenantGrowth: 'Tenant growth',
+        statusDistribution: 'Status distribution',
+        monthlyComparison: 'Monthly comparison',
+      },
       messages: {
         title: 'Support messages',
         description: 'Messages sent by tenants when their panel is blocked.',
@@ -71,6 +81,7 @@ const resources = {
       common: {
         cancel: 'Cancel',
         loading: 'Loading tenants...',
+        noData: 'No data available.',
       },
       tenant: {
         status: {

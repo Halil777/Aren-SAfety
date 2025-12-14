@@ -15,13 +15,27 @@ const mobile_account_entity_1 = require("./mobile-account.entity");
 const project_entity_1 = require("../projects/project.entity");
 const department_entity_1 = require("../departments/department.entity");
 const company_entity_1 = require("../companies/company.entity");
+const mobile_profile_controller_1 = require("./mobile-profile.controller");
+const mobile_data_controller_1 = require("./mobile-data.controller");
+const projects_module_1 = require("../projects/projects.module");
+const departments_module_1 = require("../departments/departments.module");
+const categories_module_1 = require("../categories/categories.module");
+const notifications_module_1 = require("../notifications/notifications.module");
+const locations_module_1 = require("../locations/locations.module");
 let MobileAccountsModule = class MobileAccountsModule {
 };
 exports.MobileAccountsModule = MobileAccountsModule;
 exports.MobileAccountsModule = MobileAccountsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([mobile_account_entity_1.MobileAccount, project_entity_1.Project, department_entity_1.Department, company_entity_1.Company])],
-        controllers: [mobile_accounts_controller_1.MobileAccountsController],
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([mobile_account_entity_1.MobileAccount, project_entity_1.Project, department_entity_1.Department, company_entity_1.Company]),
+            projects_module_1.ProjectsModule,
+            departments_module_1.DepartmentsModule,
+            categories_module_1.CategoriesModule,
+            notifications_module_1.NotificationsModule,
+            locations_module_1.LocationsModule,
+        ],
+        controllers: [mobile_accounts_controller_1.MobileAccountsController, mobile_profile_controller_1.MobileProfileController, mobile_data_controller_1.MobileDataController],
         providers: [mobile_accounts_service_1.MobileAccountsService],
         exports: [mobile_accounts_service_1.MobileAccountsService],
     })

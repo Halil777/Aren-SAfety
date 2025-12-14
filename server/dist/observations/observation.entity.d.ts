@@ -17,8 +17,8 @@ export declare class Observation {
     department: Department;
     categoryId: string;
     category: Category;
-    subcategoryId: string;
-    subcategory: Subcategory;
+    subcategoryId?: string | null;
+    subcategory?: Subcategory | null;
     createdByUserId: string;
     createdBy: MobileAccount;
     supervisorId: string;
@@ -34,6 +34,8 @@ export declare class Observation {
     supervisorSeenAt?: Date | null;
     fixedAt?: Date | null;
     closedAt?: Date | null;
+    supervisorAnswer?: string | null;
+    answeredAt?: Date | null;
     createdAt: Date;
     updatedAt: Date;
     media: ObservationMedia[];
