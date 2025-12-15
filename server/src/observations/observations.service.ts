@@ -197,6 +197,9 @@ export class ObservationsService {
     if (dto.status !== undefined) {
       observation.status = dto.status;
     }
+    if (dto.rejectionReason !== undefined) {
+      observation.rejectionReason = dto.rejectionReason || null;
+    }
     if (dto.supervisorSeenAt !== undefined) {
       observation.supervisorSeenAt = dto.supervisorSeenAt
         ? this.parseDate(dto.supervisorSeenAt, 'supervisorSeenAt')
@@ -210,6 +213,10 @@ export class ObservationsService {
     }
     if (dto.description !== undefined) {
       observation.description = dto.description;
+    }
+
+    if (dto.status && dto.status !== ObservationStatus.REJECTED) {
+      observation.rejectionReason = null;
     }
 
     return this.observationsRepository.save(observation);
@@ -274,6 +281,7 @@ export class ObservationsService {
     if (observation.status !== ObservationStatus.CLOSED) {
       observation.status = ObservationStatus.FIXED_PENDING_CHECK;
       observation.fixedAt = observation.fixedAt ?? now;
+      observation.rejectionReason = null;
     }
 
     await this.observationsRepository.save(observation);
@@ -400,6 +408,7 @@ export class ObservationsService {
       supervisorName: observation.supervisor?.fullName,
       createdByName: observation.createdBy?.fullName,
       supervisorAnswer: observation.supervisorAnswer,
+      rejectionReason: observation.rejectionReason,
       answeredAt: observation.answeredAt,
       media:
         observation.media?.map(m => ({

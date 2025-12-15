@@ -182,13 +182,13 @@ export class MobileAccountsService {
     });
   }
 
-  async remove(tenantId: string, id: string) {
+  async remove(tenantId: string, id: string, role?: MobileRole) {
     const account = await this.accountsRepository.findOne({
-      where: { id, tenantId, role: MobileRole.SUPERVISOR },
+      where: { id, tenantId, ...(role ? { role } : {}) },
     });
 
     if (!account) {
-      throw new NotFoundException('Supervisor not found');
+      throw new NotFoundException('Mobile account not found');
     }
 
     await this.accountsRepository.remove(account);

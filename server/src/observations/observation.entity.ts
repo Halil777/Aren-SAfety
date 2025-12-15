@@ -108,6 +108,9 @@ export class Observation {
   @Column({ type: 'text', nullable: true })
   supervisorAnswer?: string | null;
 
+  @Column({ type: 'text', nullable: true })
+  rejectionReason?: string | null;
+
   @Column({ type: 'timestamp', nullable: true })
   answeredAt?: Date | null;
 

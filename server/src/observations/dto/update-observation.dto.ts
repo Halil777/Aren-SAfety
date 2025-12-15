@@ -24,4 +24,9 @@ export class UpdateObservationDto extends PartialType(CreateObservationDto) {
   @IsString()
   @Length(2, 2000)
   description?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(2, 2000)
+  rejectionReason?: string | null;
 }

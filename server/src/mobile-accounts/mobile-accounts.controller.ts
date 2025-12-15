@@ -68,6 +68,11 @@ export class MobileAccountsController {
 
   @Delete('supervisors/:id')
   removeSupervisor(@Req() req: any, @Param('id') id: string) {
-    return this.accountsService.remove(req.user.userId, id);
+    return this.accountsService.remove(req.user.userId, id, MobileRole.SUPERVISOR);
+  }
+
+  @Delete('mobile-users/:id')
+  removeUser(@Req() req: any, @Param('id') id: string) {
+    return this.accountsService.remove(req.user.userId, id, MobileRole.USER);
   }
 }
