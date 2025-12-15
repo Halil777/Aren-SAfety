@@ -1,6 +1,19 @@
 import type React from 'react'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  FileDown,
+  FileSpreadsheet,
+  FileText,
+  Printer,
+  ChevronDown,
+} from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Helmet } from 'react-helmet'
+import * as XLSX from 'xlsx'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Button } from '@/shared/ui/button'
@@ -40,6 +53,8 @@ export function UsersListPage() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [activeRole, setActiveRole] = useState<'USER' | 'SUPERVISOR'>('USER')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [exportOpen, setExportOpen] = useState(false)
   const [formState, setFormState] = useState<UserForm>({
     fullName: '',
     phoneNumber: '',
@@ -66,6 +81,160 @@ export function UsersListPage() {
     createSupervisorMutation.isPending ||
     updateSupervisorMutation.isPending
   const isDeleting = deleteUserMutation.isPending || deleteSupervisorMutation.isPending
+  const colSpan = activeRole === 'SUPERVISOR' ? 7 : 5
+
+  const filteredRows = useMemo(() => {
+    const needle = searchTerm.trim().toLowerCase()
+    if (!needle) return rows
+
+    return rows.filter(row => {
+      const nameMatch = row.fullName?.toLowerCase().includes(needle)
+      const statusLabel = row.isActive
+        ? t('common.active', { defaultValue: 'Active' })
+        : t('common.inactive', { defaultValue: 'Inactive' })
+      const statusMatch = statusLabel.toLowerCase().includes(needle)
+      const projectNames =
+        (row.projects && row.projects.length > 0
+          ? row.projects
+          : projectsQuery.data?.filter(p => row.projectIds?.includes(p.id)))?.map(p => p.name) ??
+        []
+      const projectMatch = projectNames.some(name => name?.toLowerCase().includes(needle))
+
+      return Boolean(nameMatch || statusMatch || projectMatch)
+    })
+  }, [rows, searchTerm, projectsQuery.data, t])
+
+  const exportColumns = useMemo(() => {
+    const base = [
+      t('users.table.name', { defaultValue: 'Name' }),
+      t('users.table.login', { defaultValue: 'Login' }),
+      t('users.table.projects', { defaultValue: 'Projects' }),
+    ]
+    if (activeRole === 'SUPERVISOR') {
+      base.push(
+        t('supervisors.table.department', { defaultValue: 'Department' }),
+        t('supervisors.table.company', { defaultValue: 'Company' }),
+      )
+    }
+    base.push(t('users.table.status', { defaultValue: 'Status' }))
+    return base
+  }, [activeRole, t])
+
+  const exportRows = useMemo(() => {
+    return filteredRows.map(row => {
+      const statusText = row.isActive
+        ? t('common.active', { defaultValue: 'Active' })
+        : t('common.inactive', { defaultValue: 'Inactive' })
+
+      const projectNames =
+        (row.projects && row.projects.length > 0
+          ? row.projects
+          : projectsQuery.data?.filter(p => row.projectIds?.includes(p.id)))?.map(p => p.name) ?? []
+      const projectsValue =
+        projectNames.length > 0 ? projectNames.join(', ') : t('common.noData', { defaultValue: 'N/A' })
+
+      const rowCells: string[] = [row.fullName || '', row.login || '', projectsValue]
+
+      if (activeRole === 'SUPERVISOR') {
+        const dept =
+          'department' in row
+            ? row.department?.name ||
+              departmentsQuery.data?.find(d => d.id === row.departmentId)?.name ||
+              t('common.noData', { defaultValue: 'N/A' })
+            : t('common.noData', { defaultValue: 'N/A' })
+
+        const company =
+          'company' in row
+            ? row.company?.companyName ||
+              companiesQuery.data?.find(c => c.id === row.companyId)?.companyName ||
+              t('common.noData', { defaultValue: 'N/A' })
+            : t('common.noData', { defaultValue: 'N/A' })
+
+        rowCells.push(dept || '', company || '')
+      }
+
+      rowCells.push(statusText)
+      return rowCells
+    })
+  }, [
+    activeRole,
+    filteredRows,
+    t,
+    projectsQuery.data,
+    departmentsQuery.data,
+    companiesQuery.data,
+  ])
+
+  const headTitle = useMemo(() => {
+    const base = t('pages.users.title', { defaultValue: 'Users' })
+    const suffix =
+      activeRole === 'SUPERVISOR'
+        ? t('nav.supervisors', { defaultValue: 'Supervisors' })
+        : t('nav.users', { defaultValue: 'Users' })
+    return `${suffix || base} | Safety Tenant Admin`
+  }, [activeRole, t])
+
+  const handleExportExcel = () => {
+    const ws = XLSX.utils.aoa_to_sheet([exportColumns, ...exportRows])
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Users')
+    XLSX.writeFile(wb, `users-${activeRole.toLowerCase()}.xlsx`)
+    setExportOpen(false)
+  }
+
+  const handleExportPdf = () => {
+    const doc = new jsPDF()
+    doc.setFontSize(14)
+    doc.text(headTitle, 14, 16)
+    autoTable(doc, {
+      head: [exportColumns],
+      body: exportRows,
+      startY: 22,
+    })
+    doc.save(`users-${activeRole.toLowerCase()}.pdf`)
+    setExportOpen(false)
+  }
+
+  const handlePrint = () => {
+    const headersHtml = exportColumns.map(col => `<th style="text-align:left;padding:8px;">${col}</th>`).join('')
+    const bodyHtml = exportRows
+      .map(
+        row =>
+          `<tr>${row
+            .map(cell => `<td style="padding:8px;border-top:1px solid #e5e7eb;">${cell ?? ''}</td>`)
+            .join('')}</tr>`,
+      )
+      .join('')
+
+    const printWindow = window.open('', '', 'width=900,height=650')
+    if (!printWindow) return
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>${headTitle}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 16px; color: #111827; }
+            table { border-collapse: collapse; width: 100%; }
+            th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; }
+            td { font-size: 13px; color: #111827; }
+          </style>
+        </head>
+        <body>
+          <h3 style="margin-bottom: 12px;">${headTitle}</h3>
+          <table>
+            <thead><tr>${headersHtml}</tr></thead>
+            <tbody>${bodyHtml}</tbody>
+          </table>
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
+    printWindow.focus()
+    printWindow.print()
+    printWindow.close()
+    setExportOpen(false)
+  }
 
   const handleOpenDrawer = (row?: MobileUser | Supervisor) => {
     if (row) {
@@ -164,6 +333,9 @@ export function UsersListPage() {
 
   return (
     <div className="space-y-6">
+      <Helmet>
+        <title>{headTitle}</title>
+      </Helmet>
       <PageHeader
         title={t('pages.users.title')}
         description={t('pages.users.description')}
@@ -174,19 +346,72 @@ export function UsersListPage() {
           </Button>
         }
       />
-      <div className="flex gap-2">
-        <Button
-          variant={activeRole === 'USER' ? 'default' : 'outline'}
-          onClick={() => setActiveRole('USER')}
-        >
-          {t('nav.users')}
-        </Button>
-        <Button
-          variant={activeRole === 'SUPERVISOR' ? 'default' : 'outline'}
-          onClick={() => setActiveRole('SUPERVISOR')}
-        >
-          {t('nav.supervisors')}
-        </Button>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex gap-2">
+          <Button
+            variant={activeRole === 'USER' ? 'default' : 'outline'}
+            onClick={() => setActiveRole('USER')}
+          >
+            {t('nav.users')}
+          </Button>
+          <Button
+            variant={activeRole === 'SUPERVISOR' ? 'default' : 'outline'}
+            onClick={() => setActiveRole('SUPERVISOR')}
+          >
+            {t('nav.supervisors')}
+          </Button>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="search"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder={t('users.table.searchPlaceholder', {
+              defaultValue: 'Search by name, project, or status',
+            })}
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 md:w-72"
+          />
+          <div className="relative">
+            <Button
+              type="button"
+              variant="outline"
+              className="gap-2"
+              onClick={() => setExportOpen(o => !o)}
+            >
+              <FileDown className="h-4 w-4" />
+              {t('common.export', { defaultValue: 'Export' })}
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+            {exportOpen ? (
+              <div className="absolute right-0 z-20 mt-2 w-48 rounded-md border border-border bg-background shadow-lg">
+                <button
+                  type="button"
+                  onClick={handleExportExcel}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                >
+                  <FileSpreadsheet className="h-4 w-4 text-primary" />
+                  <span>{t('common.exportExcel', { defaultValue: 'Export Excel' })}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleExportPdf}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                >
+                  <FileText className="h-4 w-4 text-primary" />
+                  <span>{t('common.exportPdf', { defaultValue: 'Export PDF' })}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handlePrint}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                >
+                  <Printer className="h-4 w-4 text-primary" />
+                  <span>{t('common.print', { defaultValue: 'Print table' })}</span>
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
       </div>
       <Card>
         <CardContent className="space-y-4">
@@ -213,7 +438,7 @@ export function UsersListPage() {
                 {isLoading ? (
                   <tr>
                     <td
-                      colSpan={activeRole === 'SUPERVISOR' ? 7 : 5}
+                      colSpan={colSpan}
                       className="px-4 py-6 text-center text-sm text-muted-foreground"
                     >
                       {t('common.loading', { defaultValue: 'Loading...' })}
@@ -222,25 +447,29 @@ export function UsersListPage() {
                 ) : error ? (
                   <tr>
                     <td
-                      colSpan={activeRole === 'SUPERVISOR' ? 7 : 5}
+                      colSpan={colSpan}
                       className="px-4 py-6 text-center text-sm text-destructive"
                     >
                       {error.message}
                     </td>
                   </tr>
-                ) : rows.length === 0 ? (
+                ) : filteredRows.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={activeRole === 'SUPERVISOR' ? 7 : 5}
+                      colSpan={colSpan}
                       className="px-4 py-6 text-center text-sm text-muted-foreground"
                     >
-                      {activeRole === 'USER'
+                      {searchTerm.trim()
+                        ? t('common.noResults', {
+                            defaultValue: 'No matching results.',
+                          })
+                        : activeRole === 'USER'
                         ? t('users.table.empty', { defaultValue: 'No users yet.' })
                         : t('supervisors.table.empty', { defaultValue: 'No supervisors yet.' })}
                     </td>
                   </tr>
                 ) : (
-                  rows.map(row => (
+                  filteredRows.map(row => (
                     <tr key={row.id} className="hover:bg-muted/40">
                       <Td>{row.fullName}</Td>
                       <Td>{row.login}</Td>

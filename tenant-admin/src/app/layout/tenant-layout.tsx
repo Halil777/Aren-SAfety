@@ -23,6 +23,7 @@ import { useAuthStore } from "@/shared/store/auth-store";
 import { Button } from "@/shared/ui/button";
 import { LanguageSwitch } from "@/shared/ui/language-switch";
 import { ThemeToggle } from "@/shared/ui/theme-toggle";
+import Logo from "@/assets/logo/logo.png";
 
 type NavItem = {
   to?: string;
@@ -122,9 +123,6 @@ function Sidebar({
       >
         <div className="flex h-full flex-col">
           <div className="flex items-center gap-3 px-4 pb-4 pt-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary/10 text-lg font-semibold text-primary">
-              TA
-            </div>
             <div className="flex flex-col">
               <span className="text-base font-semibold leading-tight text-foreground">
                 {"ADMIN"}
@@ -245,11 +243,14 @@ function Sidebar({
             })}
           </nav>
 
-          <div className="border-t border-dashed border-border px-4 py-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {brandSubtitle}
-            </p>
-            <p className="text-sm text-foreground">Tenant safety workspace</p>
+          <div className="border-t border-dashed border-border">
+            <div className="flex items-center justify-center">
+              <img
+                src={Logo}
+                alt="Tenant logo"
+                className="h-[120px] w-auto object-contain opacity-90"
+              />
+            </div>
           </div>
         </div>
       </aside>
@@ -334,7 +335,6 @@ function UserBadge({
         <p className="text-sm font-medium text-foreground">
           {tenantName ?? "Tenant Admin"}
         </p>
-        <p className="text-xs text-muted-foreground">Tenant</p>
       </div>
       <Button
         type="button"
