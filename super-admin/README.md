@@ -130,7 +130,7 @@ npm install
 cp .env.example .env
 
 # Update .env with your API URL
-# VITE_API_BASE_URL=https://api.arensafety.com/
+# VITE_API_BASE_URL=https://api.arensafety.com/api
 ```
 
 ### Development
@@ -217,7 +217,7 @@ Each feature follows this structure:
 Create a `.env` file based on `.env.example`:
 
 ```env
-VITE_API_BASE_URL=https://api.arensafety.com/
+VITE_API_BASE_URL=https://api.arensafety.com/api
 ```
 
 ## Contributing
