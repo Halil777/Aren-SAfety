@@ -1,6 +1,7 @@
 export type TenantStatus = 'active' | 'trial' | 'suspended' | 'disabled'
 export type BillingStatus = 'trial' | 'trial_expired' | 'paid' | 'overdue' | 'cancelled'
 export type Plan = 'basic' | 'pro' | 'enterprise'
+export type TenantRole = 'ADMIN' | 'SUPERVISOR'
 
 export type TenantProfile = {
   id: string
@@ -12,4 +13,5 @@ export type TenantProfile = {
   trialEndsAt?: string | null
   paidUntil?: string | null
   plan?: Plan
+  role?: TenantRole
 }

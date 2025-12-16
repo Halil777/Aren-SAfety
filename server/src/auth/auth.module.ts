@@ -6,11 +6,13 @@ import { AuthService } from "./auth.service";
 import { AuthController } from "./auth.controller";
 import { JwtStrategy } from "./jwt.strategy";
 import { TenantsModule } from "../tenants/tenants.module";
+import { MobileAccountsModule } from "../mobile-accounts/mobile-accounts.module";
 
 @Module({
   imports: [
     ConfigModule,
     TenantsModule,
+    MobileAccountsModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

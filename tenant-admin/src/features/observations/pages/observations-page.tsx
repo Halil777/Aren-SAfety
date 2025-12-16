@@ -9,7 +9,6 @@ import { useProjectsQuery } from '@/features/projects/api/hooks'
 import { useDepartmentsQuery } from '@/features/departments/api/hooks'
 import { useCategoriesQuery } from '@/features/categories/api/hooks'
 import { useSubcategoriesQuery } from '@/features/subcategories/api/hooks'
-import { useMobileUsersQuery } from '@/features/users/api/hooks'
 import { useSupervisorsQuery } from '@/features/supervisors/api/hooks'
 import { useLocationsQuery } from '@/features/locations/api/hooks'
 import {
@@ -36,7 +35,6 @@ export function ObservationsPage() {
   const locationsQuery = useLocationsQuery()
   const categoriesQuery = useCategoriesQuery('observation')
   const subcategoriesQuery = useSubcategoriesQuery('observation')
-  const usersQuery = useMobileUsersQuery()
   const supervisorsQuery = useSupervisorsQuery()
   const observationsQuery = useObservationsQuery()
   const createMutation = useCreateObservationMutation()
@@ -145,11 +143,20 @@ export function ObservationsPage() {
     const deadline = new Date(`${formState.deadlineDate}T${formState.deadlineTime}`)
     if (Number.isNaN(deadline.getTime())) return
 
+    if (formState.createdByUserId === formState.supervisorId) {
+      window.alert(
+        t('observations.form.supervisorMismatch', {
+          defaultValue: 'Creator and supervisor must be different',
+        }),
+      )
+      return
+    }
+
     const payload: ObservationInput = {
       createdByUserId: formState.createdByUserId,
       supervisorId: formState.supervisorId,
       projectId: formState.projectId,
-      locationId: formState.locationId,
+      // locationId omitted: backend does not accept this field
       departmentId: formState.departmentId,
       categoryId: formState.categoryId,
       subcategoryId: formState.subcategoryId,
@@ -349,7 +356,7 @@ export function ObservationsPage() {
             <div className="h-[calc(100vh-64px)] overflow-y-auto p-4">
               <form className="space-y-4" onSubmit={handleSubmit}>
                 <Field
-                  label={t('observations.form.createdBy', { defaultValue: 'Created by user' })}
+                  label={t('observations.form.createdBy', { defaultValue: 'Created by supervisor' })}
                   required
                 >
                   <select
@@ -360,10 +367,10 @@ export function ObservationsPage() {
                   >
                     <option value="">
                       {t('observations.form.createdByPlaceholder', {
-                        defaultValue: 'Select user',
+                        defaultValue: 'Select supervisor',
                       })}
                     </option>
-                    {usersQuery.data?.map(user => (
+                    {supervisorsQuery.data?.map(user => (
                       <option key={user.id} value={user.id}>
                         {user.fullName}
                       </option>
@@ -449,10 +456,8 @@ export function ObservationsPage() {
 
                 <Field
                   label={t('observations.form.location', { defaultValue: 'Location' })}
-                  required
                 >
                   <select
-                    required
                     value={formState.locationId}
                     onChange={e => setFormState(s => ({ ...s, locationId: e.target.value }))}
                     disabled={!formState.projectId}
@@ -664,7 +669,6 @@ export function ObservationsPage() {
                       !formState.createdByUserId ||
                       !formState.supervisorId ||
                       !formState.projectId ||
-                      !formState.locationId ||
                       !formState.departmentId ||
                       !formState.categoryId ||
                       !formState.subcategoryId ||

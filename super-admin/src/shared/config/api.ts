@@ -1,6 +1,5 @@
 export const API_CONFIG = {
-  BASE_URL:
-    import.meta.env.VITE_API_BASE_URL || 'https://api.arensafety.com/api',
+  BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.arensafety.com/',
   TIMEOUT: 30000,
 } as const
 

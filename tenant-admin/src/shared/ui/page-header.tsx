@@ -16,10 +16,10 @@ export function PageHeader({ title, description, actions, className }: PageHeade
         className,
       )}
     >
-      <div className="space-y-1.5">
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
+      <div className="flex flex-col gap-1 md:flex-row md:items-baseline md:gap-3">
+        <h1 className="text-2xl font-semibold tracking-tight uppercase">{title}</h1>
         {description ? (
-          <p className="text-sm text-muted-foreground max-w-3xl">{description}</p>
+          <p className="text-sm text-muted-foreground max-w-3xl md:text-base">{description}</p>
         ) : null}
       </div>
       {actions ? <div className="flex items-center gap-2">{actions}</div> : null}

@@ -42,7 +42,7 @@ export class MobileAccountsService {
     const account = this.accountsRepository.create({
       ...dto,
       tenantId,
-      role: dto.role ?? MobileRole.USER,
+      role: MobileRole.SUPERVISOR,
       departmentId: department?.id,
       companyId: company?.id,
       projects,
@@ -93,7 +93,8 @@ export class MobileAccountsService {
     if (dto.email !== undefined) account.email = dto.email;
     if (dto.profession !== undefined) account.profession = dto.profession;
     if (dto.isActive !== undefined) account.isActive = dto.isActive;
-    if (dto.role !== undefined) account.role = dto.role;
+    // Force supervisors as the only supported role
+    account.role = MobileRole.SUPERVISOR;
 
     if (dto.password) {
       await account.setPassword(dto.password);
@@ -158,8 +159,20 @@ export class MobileAccountsService {
 
   async findActiveByLogin(login: string) {
     return this.accountsRepository.findOne({
-      where: { login, isActive: true },
+      where: { login, isActive: true, role: MobileRole.SUPERVISOR },
       relations: ['projects'],
+    });
+  }
+
+  async findActiveSupervisorByEmail(email: string) {
+    return this.accountsRepository.findOne({
+      where: { email, isActive: true, role: MobileRole.SUPERVISOR },
+    });
+  }
+
+  async findActiveSupervisorById(id: string, tenantId: string) {
+    return this.accountsRepository.findOne({
+      where: { id, tenantId, isActive: true, role: MobileRole.SUPERVISOR },
     });
   }
 

@@ -2,7 +2,6 @@ import { ROUTES } from '@/shared/config/api'
 import { apiClient } from '@/shared/lib/api-client'
 import type { Observation, ObservationStatus } from '@/features/observations/types/observation'
 import type { TaskItem } from '@/features/tasks/types/task'
-import type { MobileUser } from '@/features/users/types/mobile-user'
 import type { Supervisor } from '@/features/supervisors/types/supervisor'
 import type { DashboardStats } from '../types'
 
@@ -19,15 +18,13 @@ function toMonthKey(value?: string | null): string | null {
 }
 
 export async function fetchDashboardStats(): Promise<DashboardStats> {
-  const [observations, tasks, mobileUsers, supervisors] = await Promise.all([
+  const [observations, tasks, supervisors] = await Promise.all([
     apiClient.get<Observation[]>(ROUTES.OBSERVATIONS.LIST),
     apiClient.get<TaskItem[]>(ROUTES.TASKS.LIST),
-    apiClient.get<MobileUser[]>(ROUTES.MOBILE_USERS.LIST),
     apiClient.get<Supervisor[]>(ROUTES.SUPERVISORS.LIST),
   ])
 
-  const activeUsers =
-    [...mobileUsers, ...supervisors].filter(user => user.isActive !== false).length || 0
+  const activeUsers = supervisors.filter(user => user.isActive !== false).length || 0
   const openObservations = observations.filter(item => item.status !== 'CLOSED').length
 
   const statusMap = new Map<ObservationStatus, number>()

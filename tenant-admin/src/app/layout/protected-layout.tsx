@@ -10,6 +10,7 @@ export function ProtectedLayout() {
   const token = useAuthStore((state) => state.token)
   const tenant = useAuthStore((state) => state.tenant)
   const logout = useAuthStore((state) => state.logout)
+  const role = tenant?.role ?? 'ADMIN'
 
   const profileQuery = useProfileQuery(Boolean(token))
 
@@ -25,6 +26,8 @@ export function ProtectedLayout() {
   }, [logout, navigate, profileQuery.data])
 
   const isActiveOrTrial = tenant?.status === 'active' || tenant?.status === 'trial'
+  const isSupervisor = role === 'SUPERVISOR'
+  const allowedForSupervisor = ['/', '/observations', '/tasks']
 
   if (!token || !tenant) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
@@ -37,6 +40,15 @@ export function ProtectedLayout() {
 
   if (profileQuery.isError) {
     return <Navigate to="/login" replace />
+  }
+
+  if (isSupervisor) {
+    const inAllowed = allowedForSupervisor.some(path =>
+      location.pathname === path || location.pathname.startsWith(`${path}/`),
+    )
+    if (!inAllowed) {
+      return <Navigate to="/" replace />
+    }
   }
 
   return (

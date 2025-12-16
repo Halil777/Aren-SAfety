@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ObservationsService } from './observations.service';
 import { CreateObservationDto } from './dto/create-observation.dto';
@@ -23,8 +23,8 @@ export class MobileObservationsController {
 
   @Post()
   create(@Req() req: any, @Body() dto: CreateObservationDto) {
-    if (req.user.role !== MobileRole.USER) {
-      throw new Error('Only users can create observations');
+    if (req.user.role !== MobileRole.SUPERVISOR) {
+      throw new ForbiddenException('Only supervisors can create observations');
     }
     return this.observationsService.create(req.user.tenantId, req.user.mobileAccountId, dto);
   }

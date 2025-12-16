@@ -1,90 +1,89 @@
-import { Navigate, createBrowserRouter } from 'react-router-dom'
-import { ProtectedLayout } from '@/app/layout/protected-layout'
-import { DashboardPage } from '@/features/dashboard/pages/dashboard-page'
-import { CategoriesPage } from '@/features/categories/pages/categories-page'
-import { ObservationsPage } from '@/features/observations/pages/observations-page'
-import { ProjectsListPage } from '@/features/projects/pages/projects-list-page'
-import { TasksPage } from '@/features/tasks/pages/tasks-page'
-import { DepartmentsPage } from '@/features/departments/pages/departments-page'
-import { CompaniesPage } from '@/features/companies/pages/companies-page'
-import { SubcategoriesPage } from '@/features/subcategories/pages/subcategories-page'
-import { TypesPage } from '@/features/types/pages/types-page'
-import { SupervisorsPage } from '@/features/supervisors/pages/supervisors-page'
-import { LocationsPage } from '@/features/locations/pages/locations-page'
-import { UsersListPage } from '@/features/users/pages/users-list-page'
-import { LoginPage } from '@/features/auth/pages/login-page'
-import { SupportPage } from '@/features/support/pages/support-page'
-import { SubscriptionPage } from '@/features/subscription/pages/subscription-page'
+import { Navigate, createBrowserRouter } from "react-router-dom";
+import { ProtectedLayout } from "@/app/layout/protected-layout";
+import { CategoriesPage } from "@/features/categories/pages/categories-page";
+import { ObservationsPage } from "@/features/observations/pages/observations-page";
+import { ProjectsListPage } from "@/features/projects/pages/projects-list-page";
+import { TasksPage } from "@/features/tasks/pages/tasks-page";
+import { DepartmentsPage } from "@/features/departments/pages/departments-page";
+import { CompaniesPage } from "@/features/companies/pages/companies-page";
+import { SubcategoriesPage } from "@/features/subcategories/pages/subcategories-page";
+import { TypesPage } from "@/features/types/pages/types-page";
+import { LocationsPage } from "@/features/locations/pages/locations-page";
+import { SupervisorsPage } from "@/features/supervisors/pages/supervisors-page";
+import { LoginPage } from "@/features/auth/pages/login-page";
+import { SupportPage } from "@/features/support/pages/support-page";
+import { SubscriptionPage } from "@/features/subscription/pages/subscription-page";
+import { DashboardPageV2 } from "@/features/dashboard/pages/dashboard-page";
 
 export const appRouter = createBrowserRouter([
   {
-    path: '/login',
+    path: "/login",
     element: <LoginPage />,
   },
   {
-    path: '/support',
+    path: "/support",
     element: <SupportPage />,
   },
   {
-    path: '/',
+    path: "/",
     element: <ProtectedLayout />,
     children: [
       {
         index: true,
-        element: <DashboardPage />,
+        element: <DashboardPageV2 />,
       },
       {
-        path: 'users',
-        element: <UsersListPage />,
+        path: "users",
+        element: <Navigate to="/supervisors" replace />,
       },
       {
-        path: 'observations',
+        path: "observations",
         element: <ObservationsPage />,
       },
       {
-        path: 'tasks',
+        path: "tasks",
         element: <TasksPage />,
       },
       {
-        path: 'supervisors',
+        path: "supervisors",
         element: <SupervisorsPage />,
       },
       {
-        path: 'projects',
+        path: "projects",
         element: <ProjectsListPage />,
       },
       {
-        path: 'categories',
+        path: "categories",
         element: <CategoriesPage />,
       },
       {
-        path: 'departments',
+        path: "departments",
         element: <DepartmentsPage />,
       },
       {
-        path: 'companies',
+        path: "companies",
         element: <CompaniesPage />,
       },
       {
-        path: 'locations',
+        path: "locations",
         element: <LocationsPage />,
       },
       {
-        path: 'subcategories',
+        path: "subcategories",
         element: <SubcategoriesPage />,
       },
       {
-        path: 'types',
+        path: "types",
         element: <TypesPage />,
       },
       {
-        path: 'subscription',
+        path: "subscription",
         element: <SubscriptionPage />,
       },
       {
-        path: '*',
+        path: "*",
         element: <Navigate to="/" replace />,
       },
     ],
   },
-])
+]);

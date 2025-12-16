@@ -45,8 +45,11 @@ export class ObservationsService {
 
   async create(tenantId: string, creatorId: string, dto: CreateObservationDto) {
     const creatorAccountId = dto.createdByUserId ?? creatorId;
-    const creator = await this.ensureAccount(creatorAccountId, tenantId, MobileRole.USER);
+    const creator = await this.ensureAccount(creatorAccountId, tenantId, MobileRole.SUPERVISOR);
     const supervisor = await this.ensureAccount(dto.supervisorId, tenantId, MobileRole.SUPERVISOR);
+    if (creator.id === supervisor.id) {
+      throw new BadRequestException('Observation must be assigned to another supervisor');
+    }
     const company = supervisor.companyId
       ? await this.findCompany(supervisor.companyId, tenantId)
       : null;
@@ -110,9 +113,9 @@ export class ObservationsService {
 
   async findForMobile(accountId: string, role: MobileRole) {
     const where =
-      role === MobileRole.USER
-        ? { createdByUserId: accountId }
-        : { supervisorId: accountId };
+      role === MobileRole.SUPERVISOR
+        ? [{ supervisorId: accountId }, { createdByUserId: accountId }]
+        : [{ createdByUserId: accountId }];
     const data = await this.observationsRepository.find({
       where,
       relations: [
@@ -148,15 +151,19 @@ export class ObservationsService {
       throw new NotFoundException('Observation not found');
     }
 
-    if (
-      (role === MobileRole.USER && observation.createdByUserId !== accountId) ||
-      (role === MobileRole.SUPERVISOR && observation.supervisorId !== accountId)
-    ) {
+    const isCreator = observation.createdByUserId === accountId;
+    const isAssignedSupervisor = observation.supervisorId === accountId;
+
+    if (role === MobileRole.SUPERVISOR ? !(isCreator || isAssignedSupervisor) : !isCreator) {
       throw new BadRequestException('Not allowed to view this observation');
     }
 
     // Mark as seen when supervisor opens the observation so status moves off NEW automatically
-    if (role === MobileRole.SUPERVISOR && observation.status === ObservationStatus.NEW) {
+    if (
+      role === MobileRole.SUPERVISOR &&
+      isAssignedSupervisor &&
+      observation.status === ObservationStatus.NEW
+    ) {
       const seenAt = new Date();
       await this.observationsRepository.update(
         { id: observation.id },
@@ -185,11 +192,14 @@ export class ObservationsService {
     }
 
     if (role) {
-      if (role === MobileRole.USER && observation.createdByUserId !== accountId) {
+      const isCreator = observation.createdByUserId === accountId;
+      const isAssignedSupervisor = observation.supervisorId === accountId;
+
+      if (role === MobileRole.SUPERVISOR && !(isCreator || isAssignedSupervisor)) {
         throw new BadRequestException('Not allowed to update observation');
       }
 
-      if (role === MobileRole.SUPERVISOR && observation.supervisorId !== accountId) {
+      if (role !== MobileRole.SUPERVISOR && !isCreator) {
         throw new BadRequestException('Not allowed to update observation');
       }
     }

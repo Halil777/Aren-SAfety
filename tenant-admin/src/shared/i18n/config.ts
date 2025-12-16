@@ -1,4 +1,4 @@
-import i18n from "i18next";
+﻿import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
 export const LANGUAGE_STORAGE_KEY = "tenant-admin-language";
@@ -22,7 +22,7 @@ const resources = {
         users: "Users",
         observations: "Observations",
         tasks: "Tasks",
-        supervisors: "Supervisors",
+        supervisors: "Team",
         source: "Sources",
         projects: "Projects",
         departments: "Departments",
@@ -30,7 +30,7 @@ const resources = {
         locations: "Locations",
         categories: "Categories",
         subcategories: "Subcategories",
-        types: "Types",
+        types: "Branch",
         subscription: "Subscription",
       },
       common: {
@@ -39,6 +39,9 @@ const resources = {
         create: "Create",
         actions: "Actions",
         noData: "No data available.",
+        all: "All",
+        open: "Open",
+        closed: "Closed",
       },
       theme: {
         label: "Theme",
@@ -131,6 +134,39 @@ const resources = {
         },
         placeholder: "Content coming soon.",
       },
+
+      dashboard: {
+        activeUsers: "Active users",
+        activeUsersHelper: "Includes {{supervisors}} supervisors",
+        openObservations: "Open observations",
+        closedObservationsHelper: "Closed: {{count}}",
+        supervisors: "Supervisors",
+        supervisorsHelper: "Active supervisors in the tenant",
+        tenantActivity: "Tenant activity",
+        tenantActivityDescription: "Observations and tasks over time",
+        emptyState: "No data available for the selected filters.",
+        legendObservations: "Observations",
+        legendTasks: "Tasks",
+        filters: "Filters",
+        filtersHelper: "Tune the view by status and period.",
+        status: "Status",
+        allTime: "All time",
+        lastDays: "Last {{days}} days",
+        overdue: "Overdue",
+        overdueHelper: "Open items past deadline",
+        datasetSize: "Records in view",
+        datasetHelper: "After applying filters",
+        flow: "Opened vs closed",
+        flowHelper: "Trend by month within selected filters",
+        opened: "Opened",
+        closed: "Closed",
+        items: "items",
+        statusBreakdown: "Status breakdown",
+        statusBreakdownHelper: "Share of observations by status",
+        activeWindow: "Within selected window",
+        closedHelper: "Completed in the selected window",
+      },
+
       categories: {
         tabs: {
           observation: "Observation Category",
@@ -153,6 +189,7 @@ const resources = {
           name: "Category name",
         },
       },
+
       subcategories: {
         tabs: {
           observation: "Observation Subcategory",
@@ -176,6 +213,7 @@ const resources = {
           name: "Subcategory name",
         },
       },
+
       departments: {
         actions: { add: "Add Department" },
         table: {
@@ -193,6 +231,7 @@ const resources = {
           name: "Department name",
         },
       },
+
       companies: {
         actions: { add: "Add Company" },
         table: {
@@ -213,6 +252,7 @@ const resources = {
           description: "Description",
         },
       },
+
       locations: {
         actions: { add: "Add Location" },
         table: {
@@ -230,6 +270,7 @@ const resources = {
           name: "Location name",
         },
       },
+
       types: {
         actions: { add: "Add Type" },
         table: {
@@ -250,6 +291,7 @@ const resources = {
           description: "Description",
         },
       },
+
       support: {
         title: "Contact support",
         description: "Send a message to the super admin team.",
@@ -264,6 +306,7 @@ const resources = {
         backToLogin: "Back to login",
         needHelp: "Need help?",
       },
+
       subscription: {
         plan: "Plan: {{plan}}",
         billingStatus: "Billing status",
@@ -294,7 +337,7 @@ const resources = {
         users: "Kullanıcılar",
         observations: "Gözlemler",
         tasks: "Görevler",
-        supervisors: "Denetçiler",
+        supervisors: "Takım",
         source: "Kaynaklar",
         projects: "Projeler",
         departments: "Departmanlar",
@@ -311,6 +354,9 @@ const resources = {
         create: "Oluştur",
         actions: "İşlemler",
         noData: "Veri yok.",
+        all: "Tümü",
+        open: "Açık",
+        closed: "Kapalı",
       },
       theme: {
         label: "Tema",
@@ -320,7 +366,7 @@ const resources = {
       },
       language: { label: "Dil" },
       form: {
-        email: "E‑posta",
+        email: "E-posta",
         password: "Şifre",
         name: "Ad",
         description: "Açıklama",
@@ -396,6 +442,39 @@ const resources = {
         },
         placeholder: "İçerik yakında.",
       },
+
+      dashboard: {
+        activeUsers: "Aktif kullanıcılar",
+        activeUsersHelper: "{{supervisors}} denetçi dahil",
+        openObservations: "Açık gözlemler",
+        closedObservationsHelper: "Kapatılan: {{count}}",
+        supervisors: "Denetçiler",
+        supervisorsHelper: "Kiracıdaki aktif denetçiler",
+        tenantActivity: "Kiralama aktivitesi",
+        tenantActivityDescription: "Zaman içinde gözlem ve görevler",
+        emptyState: "Seçili filtreler için veri yok.",
+        legendObservations: "Gözlemler",
+        legendTasks: "Görevler",
+        filters: "Filtreler",
+        filtersHelper: "Durum ve tarih ile görünümü ayarlayın.",
+        status: "Durum",
+        allTime: "Tüm zamanlar",
+        lastDays: "Son {{days}} gün",
+        overdue: "Geciken",
+        overdueHelper: "Son tarihi geçmiş açık kayıtlar",
+        datasetSize: "Görüntülenen kayıt",
+        datasetHelper: "Filtrelerden sonra",
+        flow: "Açılan vs kapanan",
+        flowHelper: "Seçili filtrelerde aylık trend",
+        opened: "Açılan",
+        closed: "Kapanan",
+        items: "kayıt",
+        statusBreakdown: "Durum dağılımı",
+        statusBreakdownHelper: "Duruma göre gözlem payı",
+        activeWindow: "Seçili zaman aralığında",
+        closedHelper: "Seçilen aralıkta tamamlananlar",
+      },
+
       categories: {
         tabs: { observation: "Gözlem Kategorisi", task: "Görev Kategorisi" },
         actions: { addCategory: "Kategori Ekle" },
@@ -415,6 +494,7 @@ const resources = {
           name: "Kategori adı",
         },
       },
+
       subcategories: {
         tabs: {
           observation: "Gözlem Alt Kategorisi",
@@ -438,6 +518,7 @@ const resources = {
           name: "Alt kategori adı",
         },
       },
+
       departments: {
         actions: { add: "Departman Ekle" },
         table: {
@@ -455,6 +536,7 @@ const resources = {
           name: "Departman adı",
         },
       },
+
       companies: {
         actions: { add: "Şirket Ekle" },
         table: {
@@ -475,6 +557,7 @@ const resources = {
           description: "Açıklama",
         },
       },
+
       locations: {
         actions: { add: "Lokasyon Ekle" },
         table: {
@@ -492,6 +575,7 @@ const resources = {
           name: "Lokasyon adı",
         },
       },
+
       types: {
         actions: { add: "Tip Ekle" },
         table: {
@@ -512,6 +596,7 @@ const resources = {
           description: "Açıklama",
         },
       },
+
       support: {
         title: "Destek ile İletişim",
         description: "Süper admin ekibine mesaj gönderin.",
@@ -526,6 +611,7 @@ const resources = {
         backToLogin: "Girişe dön",
         needHelp: "Yardıma mı ihtiyacınız var?",
       },
+
       subscription: {
         plan: "Plan: {{plan}}",
         billingStatus: "Ödeme durumu",
@@ -556,7 +642,7 @@ const resources = {
         users: "Пользователи",
         observations: "Наблюдения",
         tasks: "Задачи",
-        supervisors: "Руководители",
+        supervisors: "Команда",
         source: "Источники",
         projects: "Проекты",
         departments: "Отделы",
@@ -573,6 +659,9 @@ const resources = {
         create: "Создать",
         actions: "Действия",
         noData: "Нет данных.",
+        all: "Все",
+        open: "Открытые",
+        closed: "Закрытые",
       },
       theme: {
         label: "Тема",
@@ -654,10 +743,43 @@ const resources = {
         },
         subscription: {
           title: "Подписка",
-          description: "Информация о пробном периоде и оплате.",
+          description: "Просмотр пробного периода и оплаты.",
         },
         placeholder: "Контент скоро появится.",
       },
+
+      dashboard: {
+        activeUsers: "Активные пользователи",
+        activeUsersHelper: "Включая руководителей: {{supervisors}}",
+        openObservations: "Открытые наблюдения",
+        closedObservationsHelper: "Закрыто: {{count}}",
+        supervisors: "Руководители",
+        supervisorsHelper: "Активные руководители в арендаторе",
+        tenantActivity: "Активность арендатора",
+        tenantActivityDescription: "Наблюдения и задачи со временем",
+        emptyState: "Нет данных для выбранных фильтров.",
+        legendObservations: "Наблюдения",
+        legendTasks: "Задачи",
+        filters: "Фильтры",
+        filtersHelper: "Настройте по статусу и периоду.",
+        status: "Статус",
+        allTime: "За всё время",
+        lastDays: "Последние {{days}} дней",
+        overdue: "Просрочено",
+        overdueHelper: "Открытые элементы после дедлайна",
+        datasetSize: "Записей в выборке",
+        datasetHelper: "После применения фильтров",
+        flow: "Открыто vs закрыто",
+        flowHelper: "Тренд по месяцам в выбранных фильтрах",
+        opened: "Открыто",
+        closed: "Закрыто",
+        items: "шт.",
+        statusBreakdown: "Распределение статусов",
+        statusBreakdownHelper: "Доля наблюдений по статусу",
+        activeWindow: "В выбранном окне",
+        closedHelper: "Завершено в выбранном окне",
+      },
+
       categories: {
         tabs: { observation: "Категория наблюдений", task: "Категория задач" },
         actions: { addCategory: "Добавить категорию" },
@@ -677,6 +799,7 @@ const resources = {
           name: "Название категории",
         },
       },
+
       subcategories: {
         tabs: {
           observation: "Подкатегория наблюдений",
@@ -700,6 +823,7 @@ const resources = {
           name: "Название подкатегории",
         },
       },
+
       departments: {
         actions: { add: "Добавить отдел" },
         table: {
@@ -717,6 +841,7 @@ const resources = {
           name: "Название отдела",
         },
       },
+
       companies: {
         actions: { add: "Добавить компанию" },
         table: {
@@ -737,6 +862,7 @@ const resources = {
           description: "Описание",
         },
       },
+
       locations: {
         actions: { add: "Добавить локацию" },
         table: {
@@ -754,6 +880,7 @@ const resources = {
           name: "Название локации",
         },
       },
+
       types: {
         actions: { add: "Добавить тип" },
         table: {
@@ -774,6 +901,7 @@ const resources = {
           description: "Описание",
         },
       },
+
       support: {
         title: "Связаться с поддержкой",
         description: "Отправьте сообщение команде суперадминов.",
@@ -788,6 +916,7 @@ const resources = {
         backToLogin: "Назад ко входу",
         needHelp: "Нужна помощь?",
       },
+
       subscription: {
         plan: "План: {{plan}}",
         billingStatus: "Статус оплаты",
@@ -805,7 +934,7 @@ const resources = {
       },
     },
   },
-};
+} as const;
 
 const storedLanguage =
   typeof window !== "undefined"

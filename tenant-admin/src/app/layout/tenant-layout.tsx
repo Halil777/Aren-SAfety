@@ -35,21 +35,20 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { to: "/", labelKey: "nav.dashboard", icon: LayoutDashboard, end: true },
-  { to: "/users", labelKey: "nav.users", icon: Users },
+  { to: "/supervisors", labelKey: "nav.supervisors", icon: Users },
   { to: "/observations", labelKey: "nav.observations", icon: ClipboardList },
-
+  { to: "/tasks", labelKey: "nav.tasks", icon: ListChecks },
   {
     labelKey: "nav.source",
     icon: Layers,
     children: [
       { to: "/projects", labelKey: "nav.projects", icon: FolderKanban },
-      { to: "/departments", labelKey: "nav.departments", icon: Building2 },
       { to: "/companies", labelKey: "nav.companies", icon: Factory },
-      { to: "/tasks", labelKey: "nav.tasks", icon: ListChecks },
-      { to: "/locations", labelKey: "nav.locations", icon: Building2 },
+      { to: "/departments", labelKey: "nav.departments", icon: Building2 },
+      { to: "/types", labelKey: "nav.types", icon: Tag },
       { to: "/categories", labelKey: "nav.categories", icon: Layers },
       { to: "/subcategories", labelKey: "nav.subcategories", icon: GitBranch },
-      { to: "/types", labelKey: "nav.types", icon: Tag },
+      { to: "/locations", labelKey: "nav.locations", icon: Building2 },
     ],
   },
 ];
@@ -64,6 +63,11 @@ export function TenantLayout({ children }: TenantLayoutProps) {
   const isSidebarOpen = useUiStore((state) => state.isSidebarOpen);
   const toggleSidebar = useUiStore((state) => state.toggleSidebar);
   const closeSidebar = useUiStore((state) => state.closeSidebar);
+  const role = useAuthStore((state) => state.tenant?.role ?? "ADMIN");
+  const isSupervisor = role === "SUPERVISOR";
+  const allowedPaths = isSupervisor
+    ? new Set<string>(["/", "/observations", "/tasks"])
+    : null;
 
   useEffect(() => {
     closeSidebar();
@@ -78,6 +82,8 @@ export function TenantLayout({ children }: TenantLayoutProps) {
         brandTitle={t("layout.brand")}
         brandSubtitle={t("layout.subtitle")}
         translate={t}
+        isSupervisor={isSupervisor}
+        allowedPaths={allowedPaths}
       />
 
       <div className="flex flex-1 flex-col md:pl-72">
@@ -101,6 +107,8 @@ type SidebarProps = {
   brandTitle: string;
   brandSubtitle: string;
   translate: (key: string, options?: Record<string, unknown>) => string;
+  isSupervisor: boolean;
+  allowedPaths: Set<string> | null;
 };
 
 function Sidebar({
@@ -109,8 +117,24 @@ function Sidebar({
   onToggle,
   brandSubtitle,
   translate,
+  isSupervisor,
+  allowedPaths,
 }: SidebarProps) {
   const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const filteredItems = isSupervisor
+    ? (items
+        .map((item) => {
+          if (item.children) {
+            const filteredChildren = item.children.filter(
+              (child) => allowedPaths?.has(child.to ?? "") ?? true
+            );
+            if (!filteredChildren.length) return null;
+            return { ...item, children: filteredChildren };
+          }
+          return allowedPaths?.has(item.to ?? "") ? item : null;
+        })
+        .filter(Boolean) as NavItem[])
+    : items;
 
   return (
     <>
@@ -143,7 +167,7 @@ function Sidebar({
           </div>
 
           <nav className="flex-1 space-y-1 px-3">
-            {items.map((item) => {
+            {filteredItems.map((item) => {
               const hasChildren = Boolean(item.children?.length);
               if (hasChildren) {
                 const isOpen = openGroup === item.labelKey;
@@ -164,8 +188,8 @@ function Sidebar({
                       className={cn(
                         "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                         isOpen
-                          ? "bg-primary/10 text-primary ring-1 ring-inset ring-primary/20"
-                          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                          ? "bg-primary/10 text-[#347248] ring-1 ring-inset ring-primary/20"
+                          : "text-[#347248] hover:bg-muted/60 hover:text-[#347248]"
                       )}
                       aria-expanded={isOpen}
                     >
@@ -200,13 +224,13 @@ function Sidebar({
                             cn(
                               "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
                               isActive
-                                ? "bg-primary/10 text-primary ring-1 ring-inset ring-primary/20"
-                                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                                ? "bg-primary/10 text-[#347248] ring-1 ring-inset ring-primary/20"
+                                : "text-[#347248] hover:bg-muted/60 hover:text-[#347248] drop-shadow-[0_1px_1px_rgba(52,114,72,0.35)]"
                             )
                           }
                         >
                           <child.icon className="h-4 w-4" />
-                          <span className="uppercase">
+                          <span className="uppercase drop-shadow-[0_1px_1px_rgba(52,114,72,0.35)]">
                             {translate(child.labelKey, {
                               defaultValue: child.labelKey,
                             })}
@@ -229,13 +253,13 @@ function Sidebar({
                     cn(
                       "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
                       isActive
-                        ? "bg-primary/10 text-primary ring-1 ring-inset ring-primary/20"
-                        : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                        ? "bg-primary/10 text-[#6e2e34] ring-1 ring-inset ring-primary/20"
+                        : "text-[#6e2e34] hover:bg-muted/60 hover:text-[#6e2e34] drop-shadow-[0_1px_1px_rgba(110,46,52,0.35)]"
                     )
                   }
                 >
                   <item.icon className="h-5 w-5" />
-                  <span className="uppercase">
+                  <span className="uppercase drop-shadow-[0_1px_1px_rgba(110,46,52,0.35)]">
                     {translate(item.labelKey, { defaultValue: item.labelKey })}
                   </span>
                 </NavLink>
@@ -271,7 +295,7 @@ type TopbarProps = {
   brandSubtitle: string;
 };
 
-function Topbar({ onToggleSidebar, brandTitle, brandSubtitle }: TopbarProps) {
+function Topbar({ onToggleSidebar }: TopbarProps) {
   const tenant = useAuthStore((state) => state.tenant);
   const logout = useAuthStore((state) => state.logout);
   const initials = useMemo(() => {
@@ -295,19 +319,6 @@ function Topbar({ onToggleSidebar, brandTitle, brandSubtitle }: TopbarProps) {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20 text-base font-semibold">
-            {initials}
-          </div>
-          <div className="hidden flex-col leading-tight sm:flex">
-            <span className="text-sm font-semibold text-foreground">
-              {tenant?.fullname || brandTitle}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {tenant?.email || brandSubtitle}
-            </span>
-          </div>
-        </div>
 
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
           <LanguageSwitch />
@@ -328,11 +339,8 @@ function UserBadge({
 }) {
   return (
     <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 shadow-sm">
-      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-        {(tenantName ?? "TA").slice(0, 2).toUpperCase()}
-      </div>
       <div className="hidden leading-tight sm:block">
-        <p className="text-sm font-medium text-foreground">
+        <p className="text-sm font-medium text-foreground uppercase">
           {tenantName ?? "Tenant Admin"}
         </p>
       </div>
