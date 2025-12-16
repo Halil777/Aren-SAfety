@@ -39,7 +39,7 @@ export type Observation = {
 export type ObservationInput = {
   createdByUserId: string
   projectId: string
-  locationId: string
+  locationId?: string
   departmentId: string
   categoryId: string
   subcategoryId: string

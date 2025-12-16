@@ -14,7 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/shared/lib/cn";
@@ -298,14 +298,14 @@ type TopbarProps = {
 function Topbar({ onToggleSidebar }: TopbarProps) {
   const tenant = useAuthStore((state) => state.tenant);
   const logout = useAuthStore((state) => state.logout);
-  const initials = useMemo(() => {
-    if (!tenant?.fullname) return "TA";
-    const parts = tenant.fullname.split(" ").filter(Boolean);
-    const [first, second] = parts;
-    const firstInitial = first?.[0];
-    const secondInitial = second?.[0];
-    return `${firstInitial ?? ""}${secondInitial ?? ""}`.toUpperCase() || "TA";
-  }, [tenant?.fullname]);
+  // const initials = useMemo(() => {
+  //   if (!tenant?.fullname) return "TA";
+  //   const parts = tenant.fullname.split(" ").filter(Boolean);
+  //   const [first, second] = parts;
+  //   const firstInitial = first?.[0];
+  //   const secondInitial = second?.[0];
+  //   return `${firstInitial ?? ""}${secondInitial ?? ""}`.toUpperCase() || "TA";
+  // }, [tenant?.fullname]);
 
   return (
     <header className="sticky top-0 z-20 border-b border-border/80 bg-background/80 backdrop-blur">

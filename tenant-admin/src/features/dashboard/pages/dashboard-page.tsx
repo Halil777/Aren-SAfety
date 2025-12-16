@@ -487,7 +487,7 @@ export function DashboardPageV2() {
               {t("dashboard.period", { defaultValue: "Period" })}
             </div>
             <div className="flex flex-wrap gap-2">
-              {[30, 90, 180, "ALL" as const].map((opt) => (
+              {[30, 90, 180, "ALL" as const].map((opt: any) => (
                 <Chip
                   key={String(opt)}
                   active={rangeFilter === opt}
