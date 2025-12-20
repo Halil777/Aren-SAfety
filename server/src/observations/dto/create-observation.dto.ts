@@ -34,6 +34,10 @@ export class CreateObservationDto {
   @IsUUID()
   projectId: string;
 
+  @IsOptional()
+  @IsUUID()
+  locationId?: string;
+
   @IsUUID()
   departmentId: string;
 

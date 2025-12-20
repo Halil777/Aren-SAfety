@@ -23,6 +23,12 @@ import { useAuthStore } from "@/shared/store/auth-store";
 import { Button } from "@/shared/ui/button";
 import { LanguageSwitch } from "@/shared/ui/language-switch";
 import { ThemeToggle } from "@/shared/ui/theme-toggle";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui/tooltip";
 import Logo from "@/assets/logo/logo.png";
 
 type NavItem = {
@@ -70,7 +76,11 @@ export function TenantLayout({ children }: TenantLayoutProps) {
     : null;
 
   useEffect(() => {
-    closeSidebar();
+    // Only close sidebar on mobile when navigating
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      closeSidebar();
+    }
   }, [location.pathname, closeSidebar]);
 
   return (
@@ -86,7 +96,12 @@ export function TenantLayout({ children }: TenantLayoutProps) {
         allowedPaths={allowedPaths}
       />
 
-      <div className="flex flex-1 flex-col md:pl-72">
+      <div
+        className={cn(
+          "flex flex-1 flex-col transition-all duration-200",
+          isSidebarOpen ? "md:pl-72" : "md:pl-20"
+        )}
+      >
         <Topbar
           onToggleSidebar={toggleSidebar}
           brandTitle={t("layout.brand")}
@@ -137,17 +152,35 @@ function Sidebar({
     : items;
 
   return (
-    <>
+    <TooltipProvider delayDuration={300}>
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-30 w-72 border-r border-border bg-card/95 shadow-sm backdrop-blur transition-transform duration-200 ease-in-out md:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed inset-y-0 left-0 z-30 bg-card/95 backdrop-blur transition-all duration-200 ease-in-out",
+          // Desktop: change width, always visible
+          isOpen
+            ? "border-r border-border shadow-sm md:w-72"
+            : "md:w-20 shadow-none border-none",
+          "md:translate-x-0",
+          // Mobile: full width, slide in/out
+          "max-md:w-72",
+          isOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"
         )}
         aria-label="Sidebar"
       >
         <div className="flex h-full flex-col">
-          <div className="flex items-center gap-3 px-4 pb-4 pt-5">
-            <div className="flex flex-col">
+          <div
+            className={cn(
+              "flex items-center gap-3 pb-4 pt-5",
+              isOpen ? "px-4" : "md:justify-center md:px-2 max-md:px-4"
+            )}
+          >
+            {/* Show brand on mobile always, on desktop only when open */}
+            <div
+              className={cn(
+                "flex flex-col",
+                !isOpen && "max-md:flex md:hidden"
+              )}
+            >
               <span className="text-base font-semibold leading-tight text-foreground">
                 {"ADMIN"}
               </span>
@@ -155,10 +188,11 @@ function Sidebar({
                 {brandSubtitle}
               </span>
             </div>
+            {/* Close button only on mobile */}
             <Button
               variant="ghost"
               size="icon"
-              className="ml-auto md:hidden"
+              className={cn("ml-auto md:hidden", !isOpen && "max-md:flex")}
               aria-label="Close sidebar"
               onClick={onToggle}
             >
@@ -166,11 +200,64 @@ function Sidebar({
             </Button>
           </div>
 
-          <nav className="flex-1 space-y-1 px-3">
+          <nav
+            className={cn(
+              "flex-1 flex flex-col",
+              isOpen ? "space-y-1 px-3" : "space-y-3 px-3 py-2 md:items-center"
+            )}
+          >
             {filteredItems.map((item) => {
               const hasChildren = Boolean(item.children?.length);
               if (hasChildren) {
-                const isOpen = openGroup === item.labelKey;
+                const isGroupOpen = openGroup === item.labelKey;
+
+                // When sidebar is closed on desktop, render children as individual icon buttons
+                if (!isOpen) {
+                  return (
+                    <div key={item.labelKey} className="space-y-3">
+                      {item.children?.map((child) => {
+                        const childLabel = translate(child.labelKey, {
+                          defaultValue: child.labelKey,
+                        });
+
+                        return (
+                          <Tooltip key={child.to ?? child.labelKey}>
+                            <TooltipTrigger asChild>
+                              <NavLink
+                                to={child.to ?? "#"}
+                                end={child.end}
+                                className={({ isActive }) =>
+                                  cn(
+                                    "flex items-center text-sm font-medium transition-colors text-white",
+                                    "md:gap-0 md:justify-center md:mx-auto max-md:gap-3 max-md:px-3",
+                                    "md:h-12 md:w-12 md:rounded-xl max-md:rounded-xl max-md:py-2.5",
+                                    isActive
+                                      ? "bg-[#347248]"
+                                      : "bg-[#347248]/80 hover:bg-[#347248]"
+                                  )
+                                }
+                              >
+                                <child.icon className="h-5 w-5 flex-shrink-0" />
+                                {/* Show text on mobile always, on desktop hide when closed */}
+                                <span className="uppercase max-md:flex md:hidden">
+                                  {childLabel}
+                                </span>
+                              </NavLink>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="right"
+                              className="hidden md:block"
+                            >
+                              <p className="uppercase">{childLabel}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      })}
+                    </div>
+                  );
+                }
+
+                // When sidebar is open, render as grouped dropdown
                 return (
                   <div
                     key={item.labelKey}
@@ -180,20 +267,21 @@ function Sidebar({
                   >
                     <button
                       type="button"
-                      onClick={() =>
+                      onClick={() => {
                         setOpenGroup((current) =>
                           current === item.labelKey ? null : item.labelKey
-                        )
-                      }
+                        );
+                      }}
                       className={cn(
-                        "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                        isOpen
-                          ? "bg-primary/10 text-[#347248] ring-1 ring-inset ring-primary/20"
-                          : "text-[#347248] hover:bg-muted/60 hover:text-[#347248]"
+                        "flex w-full items-center rounded-xl py-2.5 text-sm font-medium transition-colors ring-1 ring-inset text-white",
+                        "gap-3 px-3",
+                        isGroupOpen
+                          ? "bg-[#347248] ring-[#347248]/40"
+                          : "bg-[#347248]/80 ring-[#347248]/60 hover:bg-[#347248] hover:ring-[#347248]/80"
                       )}
-                      aria-expanded={isOpen}
+                      aria-expanded={isGroupOpen}
                     >
-                      <item.icon className="h-5 w-5" />
+                      <item.icon className="h-5 w-5 flex-shrink-0" />
                       <span className="flex-1 text-left uppercase">
                         {translate(item.labelKey, {
                           defaultValue: item.labelKey,
@@ -202,14 +290,14 @@ function Sidebar({
                       <ChevronDown
                         className={cn(
                           "h-4 w-4 transition-transform duration-200",
-                          isOpen ? "rotate-180" : ""
+                          isGroupOpen ? "rotate-180" : ""
                         )}
                       />
                     </button>
                     <div
                       className={cn(
-                        "overflow-hidden rounded-xl bg-muted/50 shadow-sm transition-all",
-                        isOpen
+                        "rounded-xl bg-muted/50 shadow-sm transition-all overflow-hidden",
+                        isGroupOpen
                           ? "mt-1 space-y-1 p-2 opacity-100"
                           : "max-h-0 p-0 opacity-0 pointer-events-none"
                       )}
@@ -222,15 +310,15 @@ function Sidebar({
                           onClick={() => setOpenGroup(null)}
                           className={({ isActive }) =>
                             cn(
-                              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ring-1 ring-inset text-white",
                               isActive
-                                ? "bg-primary/10 text-[#347248] ring-1 ring-inset ring-primary/20"
-                                : "text-[#347248] hover:bg-muted/60 hover:text-[#347248] drop-shadow-[0_1px_1px_rgba(52,114,72,0.35)]"
+                                ? "bg-[#347248] ring-[#347248]/40"
+                                : "bg-[#347248]/80 ring-[#347248]/60 hover:bg-[#347248] hover:ring-[#347248]/80"
                             )
                           }
                         >
                           <child.icon className="h-4 w-4" />
-                          <span className="uppercase drop-shadow-[0_1px_1px_rgba(52,114,72,0.35)]">
+                          <span className="uppercase">
                             {translate(child.labelKey, {
                               defaultValue: child.labelKey,
                             })}
@@ -244,48 +332,87 @@ function Sidebar({
 
               if (!item.to) return null;
 
-              return (
+              const itemLabel = translate(item.labelKey, {
+                defaultValue: item.labelKey,
+              });
+
+              const navLink = (
                 <NavLink
                   key={item.to}
                   to={item.to}
                   end={item.end}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                      isActive
-                        ? "bg-primary/10 text-[#6e2e34] ring-1 ring-inset ring-primary/20"
-                        : "text-[#6e2e34] hover:bg-muted/60 hover:text-[#6e2e34] drop-shadow-[0_1px_1px_rgba(110,46,52,0.35)]"
+                      "flex items-center text-sm font-medium transition-colors text-white",
+                      isOpen
+                        ? "gap-3 px-3 rounded-xl py-2.5 ring-1 ring-inset"
+                        : "md:gap-0 md:justify-center md:mx-auto md:h-12 md:w-12 md:rounded-xl max-md:gap-3 max-md:px-3 max-md:rounded-xl max-md:py-2.5",
+                      isOpen
+                        ? isActive
+                          ? "bg-[#6e2e34] ring-[#6e2e34]/40"
+                          : "bg-[#6e2e34]/80 ring-[#6e2e34]/60 hover:bg-[#6e2e34] hover:ring-[#6e2e34]/80"
+                        : isActive
+                        ? "bg-[#6e2e34]"
+                        : "bg-[#6e2e34]/80 hover:bg-[#6e2e34]"
                     )
                   }
                 >
-                  <item.icon className="h-5 w-5" />
-                  <span className="uppercase drop-shadow-[0_1px_1px_rgba(110,46,52,0.35)]">
-                    {translate(item.labelKey, { defaultValue: item.labelKey })}
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  {/* Show text on mobile always, on desktop only when open */}
+                  <span
+                    className={cn(
+                      "uppercase",
+                      !isOpen && "max-md:flex md:hidden"
+                    )}
+                  >
+                    {itemLabel}
                   </span>
                 </NavLink>
               );
+
+              // Wrap with tooltip when sidebar is closed on desktop
+              if (!isOpen) {
+                return (
+                  <Tooltip key={item.to}>
+                    <TooltipTrigger asChild>{navLink}</TooltipTrigger>
+                    <TooltipContent side="right" className="hidden md:block">
+                      <p className="uppercase">{itemLabel}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              }
+
+              return navLink;
             })}
           </nav>
 
-          <div className="border-t border-dashed border-border">
+          <div
+            className={cn(
+              "border-t border-dashed border-border",
+              !isOpen && "border-none"
+            )}
+          >
             <div className="flex items-center justify-center">
               <img
                 src={Logo}
                 alt="Tenant logo"
-                className="h-[120px] w-auto object-contain opacity-90"
+                className={cn(
+                  "w-auto object-contain opacity-90 transition-all",
+                  isOpen ? "h-[120px]" : "h-[60px]"
+                )}
               />
             </div>
           </div>
         </div>
       </aside>
-      {isOpen ? (
+      {isOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/30 backdrop-blur-sm md:hidden"
           role="presentation"
           onClick={onToggle}
         />
-      ) : null}
-    </>
+      )}
+    </TooltipProvider>
   );
 }
 
@@ -298,14 +425,6 @@ type TopbarProps = {
 function Topbar({ onToggleSidebar }: TopbarProps) {
   const tenant = useAuthStore((state) => state.tenant);
   const logout = useAuthStore((state) => state.logout);
-  // const initials = useMemo(() => {
-  //   if (!tenant?.fullname) return "TA";
-  //   const parts = tenant.fullname.split(" ").filter(Boolean);
-  //   const [first, second] = parts;
-  //   const firstInitial = first?.[0];
-  //   const secondInitial = second?.[0];
-  //   return `${firstInitial ?? ""}${secondInitial ?? ""}`.toUpperCase() || "TA";
-  // }, [tenant?.fullname]);
 
   return (
     <header className="sticky top-0 z-20 border-b border-border/80 bg-background/80 backdrop-blur">
@@ -313,8 +432,7 @@ function Topbar({ onToggleSidebar }: TopbarProps) {
         <Button
           variant="ghost"
           size="icon"
-          className="md:hidden"
-          aria-label="Open sidebar"
+          aria-label="Toggle sidebar"
           onClick={onToggleSidebar}
         >
           <Menu className="h-5 w-5" />

@@ -18,6 +18,7 @@ import { TypeEntity } from "./types/type.entity";
 import { TypesModule } from "./types/types.module";
 import { Task } from "./tasks/task.entity";
 import { TasksModule } from "./tasks/tasks.module";
+import { TaskAttachment } from "./tasks/taskAttachment.entity";
 import { Company } from "./companies/company.entity";
 import { CompaniesModule } from "./companies/companies.module";
 import { MobileAccount } from "./mobile-accounts/mobile-account.entity";
@@ -76,6 +77,7 @@ import { LocationsModule } from "./locations/locations.module";
             Department,
             TypeEntity,
             Task,
+            TaskAttachment,
             Company,
             MobileAccount,
             Observation,

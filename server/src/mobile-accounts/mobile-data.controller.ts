@@ -49,19 +49,25 @@ export class MobileDataController {
   }
 
   @Get('categories')
-  async getCategories(@Req() req: any) {
+  async getCategories(@Req() req: any, @Query('type') type?: string) {
+    const categoryType = type === CategoryType.TASK ? CategoryType.TASK : CategoryType.OBSERVATION;
     const categories = await this.categoriesService.findAllForTenant(
       req.user.tenantId,
-      CategoryType.OBSERVATION,
+      categoryType,
     );
     return categories.map(c => ({ id: c.id, name: c.categoryName }));
   }
 
   @Get('subcategories')
-  async getSubcategories(@Req() req: any, @Query('categoryId') categoryId?: string) {
+  async getSubcategories(
+    @Req() req: any,
+    @Query('categoryId') categoryId?: string,
+    @Query('type') type?: string,
+  ) {
+    const categoryType = type === CategoryType.TASK ? CategoryType.TASK : CategoryType.OBSERVATION;
     const categories = await this.categoriesService.findAllForTenant(
       req.user.tenantId,
-      CategoryType.OBSERVATION,
+      categoryType,
     );
 
     if (categoryId) {

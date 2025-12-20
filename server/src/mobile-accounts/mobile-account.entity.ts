@@ -17,6 +17,8 @@ import { MobileRole } from './mobile-role';
 import { Observation } from '../observations/observation.entity';
 import { ObservationMedia } from '../observations/observationMedia.entity';
 import { Company } from '../companies/company.entity';
+import { Task } from '../tasks/task.entity';
+import { TaskAttachment } from '../tasks/taskAttachment.entity';
 
 @Entity('mobile_accounts')
 export class MobileAccount {
@@ -103,4 +105,13 @@ export class MobileAccount {
 
   @OneToMany(() => ObservationMedia, media => media.uploadedBy)
   uploadedMedia: ObservationMedia[];
+
+  @OneToMany(() => Task, task => task.createdBy)
+  createdTasks: Task[];
+
+  @OneToMany(() => Task, task => task.supervisor)
+  assignedTasks: Task[];
+
+  @OneToMany(() => TaskAttachment, media => media.uploadedBy)
+  uploadedTaskMedia: TaskAttachment[];
 }

@@ -16,6 +16,7 @@ import { MobileAccount } from '../mobile-accounts/mobile-account.entity';
 import { ObservationStatus } from './observation-status';
 import { ObservationMedia } from './observationMedia.entity';
 import { Company } from '../companies/company.entity';
+import { Location } from '../locations/location.entity';
 
 @Entity('observations')
 export class Observation {
@@ -33,6 +34,12 @@ export class Observation {
 
   @ManyToOne(() => Project, project => project.observations, { onDelete: 'CASCADE' })
   project: Project;
+
+  @Column({ nullable: true })
+  locationId?: string | null;
+
+  @ManyToOne(() => Location, { onDelete: 'SET NULL' })
+  location?: Location | null;
 
   @Column()
   departmentId: string;

@@ -12,6 +12,7 @@ import { Project } from '../projects/project.entity';
 import { Subcategory } from '../subcategories/subcategory.entity';
 import { CategoryType } from './category-type';
 import { Observation } from '../observations/observation.entity';
+import { Task } from '../tasks/task.entity';
 
 @Entity('categories')
 export class Category {
@@ -45,6 +46,9 @@ export class Category {
 
   @OneToMany(() => Observation, observation => observation.category)
   observations: Observation[];
+
+  @OneToMany(() => Task, task => task.category)
+  tasks: Task[];
 
   @CreateDateColumn()
   createdAt: Date;

@@ -14,6 +14,7 @@ import { UpdateObservationDto } from './dto/update-observation.dto';
 import { CreateObservationMediaDto } from './dto/create-observation-media.dto';
 import { MobileAccount } from '../mobile-accounts/mobile-account.entity';
 import { Project } from '../projects/project.entity';
+import { Location } from '../locations/location.entity';
 import { Department } from '../departments/department.entity';
 import { Category } from '../categories/category.entity';
 import { Subcategory } from '../subcategories/subcategory.entity';
@@ -33,6 +34,8 @@ export class ObservationsService {
     private readonly accountsRepository: Repository<MobileAccount>,
     @InjectRepository(Project)
     private readonly projectsRepository: Repository<Project>,
+    @InjectRepository(Location)
+    private readonly locationsRepository: Repository<Location>,
     @InjectRepository(Department)
     private readonly departmentsRepository: Repository<Department>,
     @InjectRepository(Category)
@@ -54,6 +57,9 @@ export class ObservationsService {
       ? await this.findCompany(supervisor.companyId, tenantId)
       : null;
     const project = await this.findProject(dto.projectId, tenantId);
+    const location = dto.locationId
+      ? await this.findLocation(dto.locationId, tenantId, project.id)
+      : null;
     const department = await this.findDepartment(dto.departmentId, tenantId);
     const category = await this.findCategory(dto.categoryId, tenantId);
     const subcategory = dto.subcategoryId
@@ -70,6 +76,7 @@ export class ObservationsService {
       createdByUserId: creator.id,
       supervisorId: supervisor.id,
       projectId: project.id,
+      locationId: location?.id ?? null,
       departmentId: department.id,
       categoryId: category.id,
       subcategoryId: subcategory?.id ?? null,
@@ -99,6 +106,7 @@ export class ObservationsService {
       where: { tenantId },
       relations: [
         'project',
+        'location',
         'department',
         'category',
         'subcategory',
@@ -120,6 +128,7 @@ export class ObservationsService {
       where,
       relations: [
         'project',
+        'location',
         'department',
         'category',
         'subcategory',
@@ -138,6 +147,7 @@ export class ObservationsService {
       where: { id },
       relations: [
         'project',
+        'location',
         'department',
         'category',
         'subcategory',
@@ -313,6 +323,7 @@ export class ObservationsService {
       where: { id: observation.id },
       relations: [
         'project',
+        'location',
         'department',
         'category',
         'subcategory',
@@ -343,6 +354,16 @@ export class ObservationsService {
       throw new NotFoundException('Project not found for tenant');
     }
     return project;
+  }
+
+  private async findLocation(locationId: string, tenantId: string, projectId: string) {
+    const location = await this.locationsRepository.findOne({
+      where: { id: locationId, tenantId, projectId },
+    });
+    if (!location) {
+      throw new NotFoundException('Location not found for project');
+    }
+    return location;
   }
 
   private async findDepartment(departmentId: string, tenantId: string) {
@@ -404,6 +425,7 @@ export class ObservationsService {
       createdAt: observation.createdAt,
       status: observation.status,
       projectId: observation.projectId,
+      locationId: observation.locationId,
       departmentId: observation.departmentId,
       categoryId: observation.categoryId,
       subcategoryId: observation.subcategoryId,
@@ -411,6 +433,7 @@ export class ObservationsService {
       createdByUserId: observation.createdByUserId,
       companyId: observation.companyId,
       projectName: observation.project?.name,
+      locationName: observation.location?.name,
       departmentName: observation.department?.name,
       categoryName: (observation.category as any)?.categoryName,
       subcategoryName: (observation.subcategory as any)?.subcategoryName,

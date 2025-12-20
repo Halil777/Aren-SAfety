@@ -7,6 +7,7 @@ import { Observation } from './observation.entity';
 import { ObservationMedia } from './observationMedia.entity';
 import { MobileAccount } from '../mobile-accounts/mobile-account.entity';
 import { Project } from '../projects/project.entity';
+import { Location } from '../locations/location.entity';
 import { Department } from '../departments/department.entity';
 import { Category } from '../categories/category.entity';
 import { Subcategory } from '../subcategories/subcategory.entity';
@@ -19,6 +20,7 @@ import { Company } from '../companies/company.entity';
       ObservationMedia,
       MobileAccount,
       Project,
+      Location,
       Department,
       Category,
       Subcategory,

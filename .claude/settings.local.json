@@ -15,7 +15,8 @@
       "Bash(findstr:*)",
       "Bash(taskkill /F /PID 16072)",
       "Bash(taskkill //F //PID 16072)",
-      "Bash(timeout /t 1)"
+      "Bash(timeout /t 1)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

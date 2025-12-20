@@ -1,7 +1,7 @@
 import { ROUTES } from '@/shared/config/api'
 import { apiClient } from '@/shared/lib/api-client'
 import type { Observation, ObservationStatus } from '@/features/observations/types/observation'
-import type { TaskItem } from '@/features/tasks/types/task'
+import type { Task } from '@/features/tasks/types/task'
 import type { Supervisor } from '@/features/supervisors/types/supervisor'
 import type { DashboardStats } from '../types'
 
@@ -20,7 +20,7 @@ function toMonthKey(value?: string | null): string | null {
 export async function fetchDashboardStats(): Promise<DashboardStats> {
   const [observations, tasks, supervisors] = await Promise.all([
     apiClient.get<Observation[]>(ROUTES.OBSERVATIONS.LIST),
-    apiClient.get<TaskItem[]>(ROUTES.TASKS.LIST),
+    apiClient.get<Task[]>(ROUTES.TASKS.LIST),
     apiClient.get<Supervisor[]>(ROUTES.SUPERVISORS.LIST),
   ])
 

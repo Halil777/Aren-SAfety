@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -13,29 +14,42 @@ import { AuthGuard } from '@nestjs/passport';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { CreateTaskMediaDto } from './dto/create-task-media.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('api/tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
-  @Post()
-  create(@Req() req: any, @Body() dto: CreateTaskDto) {
-    return this.tasksService.create(req.user.userId, dto);
+  private getTenantId(req: any) {
+    return req.user?.tenantId ?? req.user?.userId;
   }
 
   @Get()
-  findAll(@Req() req: any) {
-    return this.tasksService.findAllForTenant(req.user.userId);
+  list(@Req() req: any) {
+    return this.tasksService.findAllForTenant(this.getTenantId(req));
+  }
+
+  @Post()
+  create(@Req() req: any, @Body() dto: CreateTaskDto) {
+    if (!dto.createdByUserId) {
+      throw new BadRequestException('createdByUserId is required');
+    }
+    return this.tasksService.create(this.getTenantId(req), dto.createdByUserId, dto);
   }
 
   @Patch(':id')
   update(@Req() req: any, @Param('id') id: string, @Body() dto: UpdateTaskDto) {
-    return this.tasksService.update(req.user.userId, id, dto);
+    return this.tasksService.updateStatus(this.getTenantId(req), null, null, id, dto);
+  }
+
+  @Post(':id/media')
+  addMedia(@Req() req: any, @Param('id') id: string, @Body() dto: CreateTaskMediaDto) {
+    return this.tasksService.addMedia(this.getTenantId(req), id, dto);
   }
 
   @Delete(':id')
   remove(@Req() req: any, @Param('id') id: string) {
-    return this.tasksService.remove(req.user.userId, id);
+    return this.tasksService.remove(this.getTenantId(req), id);
   }
 }

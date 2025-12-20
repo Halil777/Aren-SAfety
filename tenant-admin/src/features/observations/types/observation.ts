@@ -3,6 +3,7 @@ export type ObservationStatus =
   | 'SEEN_BY_SUPERVISOR'
   | 'IN_PROGRESS'
   | 'FIXED_PENDING_CHECK'
+  | 'REJECTED'
   | 'CLOSED'
 
 export type Observation = {

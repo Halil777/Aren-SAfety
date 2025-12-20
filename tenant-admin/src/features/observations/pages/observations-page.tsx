@@ -29,6 +29,7 @@ const statusOptions: ObservationStatus[] = [
   "SEEN_BY_SUPERVISOR",
   "IN_PROGRESS",
   "FIXED_PENDING_CHECK",
+  "REJECTED",
   "CLOSED",
 ];
 
@@ -62,7 +63,6 @@ export function ObservationsPage() {
     description: "",
     status: "NEW",
     deadlineDate: "",
-    deadlineTime: "",
     evidenceFiles: [],
     correctiveFiles: [],
   });
@@ -102,9 +102,6 @@ export function ObservationsPage() {
         deadlineDate: !Number.isNaN(deadline.getTime())
           ? deadline.toISOString().slice(0, 10)
           : "",
-        deadlineTime: !Number.isNaN(deadline.getTime())
-          ? deadline.toISOString().slice(11, 16)
-          : "",
         evidenceFiles: [],
         correctiveFiles: [],
       });
@@ -124,7 +121,6 @@ export function ObservationsPage() {
         description: "",
         status: "NEW",
         deadlineDate: "",
-        deadlineTime: "",
         evidenceFiles: [],
         correctiveFiles: [],
       });
@@ -150,9 +146,7 @@ export function ObservationsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const deadline = new Date(
-      `${formState.deadlineDate}T${formState.deadlineTime}`
-    );
+    const deadline = new Date(formState.deadlineDate);
     if (Number.isNaN(deadline.getTime())) return;
 
     if (formState.createdByUserId === formState.supervisorId) {
@@ -168,7 +162,7 @@ export function ObservationsPage() {
       createdByUserId: formState.createdByUserId,
       supervisorId: formState.supervisorId,
       projectId: formState.projectId,
-      // locationId omitted: backend does not accept this field
+      locationId: formState.locationId || undefined,
       departmentId: formState.departmentId,
       categoryId: formState.categoryId,
       subcategoryId: formState.subcategoryId,
@@ -725,46 +719,25 @@ export function ObservationsPage() {
                   </Field>
                 </TwoCol>
 
-                <TwoCol>
-                  <Field
-                    label={t("observations.form.deadlineDate", {
-                      defaultValue: "Deadline date",
-                    })}
+                <Field
+                  label={t("observations.form.deadlineDate", {
+                    defaultValue: "Deadline date",
+                  })}
+                  required
+                >
+                  <input
                     required
-                  >
-                    <input
-                      required
-                      type="date"
-                      value={formState.deadlineDate}
-                      onChange={(e) =>
-                        setFormState((s) => ({
-                          ...s,
-                          deadlineDate: e.target.value,
-                        }))
-                      }
-                      className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                    />
-                  </Field>
-                  <Field
-                    label={t("observations.form.deadlineTime", {
-                      defaultValue: "Deadline time",
-                    })}
-                    required
-                  >
-                    <input
-                      required
-                      type="time"
-                      value={formState.deadlineTime}
-                      onChange={(e) =>
-                        setFormState((s) => ({
-                          ...s,
-                          deadlineTime: e.target.value,
-                        }))
-                      }
-                      className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                    />
-                  </Field>
-                </TwoCol>
+                    type="date"
+                    value={formState.deadlineDate}
+                    onChange={(e) =>
+                      setFormState((s) => ({
+                        ...s,
+                        deadlineDate: e.target.value,
+                      }))
+                    }
+                    className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  />
+                </Field>
 
                 <Field
                   label={t("observations.form.evidence", {
@@ -846,7 +819,6 @@ export function ObservationsPage() {
                       !formState.workerFullName ||
                       !formState.workerProfession ||
                       !formState.deadlineDate ||
-                      !formState.deadlineTime ||
                       isSaving
                     }
                   >
@@ -879,7 +851,6 @@ type ObservationForm = {
   riskLevel: number;
   description: string;
   deadlineDate: string;
-  deadlineTime: string;
   status: ObservationStatus;
   evidenceFiles: File[];
   correctiveFiles: File[];
