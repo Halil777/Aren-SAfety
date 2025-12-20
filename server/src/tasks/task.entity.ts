@@ -70,13 +70,13 @@ export class Task {
   })
   createdBy?: MobileAccount | null;
 
-  @Column()
-  supervisorId: string;
+  @Column({ nullable: true })
+  supervisorId?: string | null;
 
   @ManyToOne(() => MobileAccount, (account) => account.assignedTasks, {
     onDelete: "CASCADE",
   })
-  supervisor: MobileAccount;
+  supervisor?: MobileAccount | null;
 
   @Column({ nullable: true })
   companyId?: string | null;
