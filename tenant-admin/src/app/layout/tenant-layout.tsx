@@ -76,7 +76,6 @@ export function TenantLayout({ children }: TenantLayoutProps) {
     : null;
 
   useEffect(() => {
-    // Only close sidebar on mobile when navigating
     const isMobile = window.innerWidth < 768;
     if (isMobile) {
       closeSidebar();
@@ -136,6 +135,7 @@ function Sidebar({
   allowedPaths,
 }: SidebarProps) {
   const [openGroup, setOpenGroup] = useState<string | null>(null);
+
   const filteredItems = isSupervisor
     ? (items
         .map((item) => {
@@ -156,12 +156,10 @@ function Sidebar({
       <aside
         className={cn(
           "fixed inset-y-0 left-0 z-30 bg-card/95 backdrop-blur transition-all duration-200 ease-in-out",
-          // Desktop: change width, always visible
           isOpen
             ? "border-r border-border shadow-sm md:w-72"
             : "md:w-20 shadow-none border-none",
           "md:translate-x-0",
-          // Mobile: full width, slide in/out
           "max-md:w-72",
           isOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"
         )}
@@ -174,7 +172,6 @@ function Sidebar({
               isOpen ? "px-4" : "md:justify-center md:px-2 max-md:px-4"
             )}
           >
-            {/* Show brand on mobile always, on desktop only when open */}
             <div
               className={cn(
                 "flex flex-col",
@@ -188,7 +185,7 @@ function Sidebar({
                 {brandSubtitle}
               </span>
             </div>
-            {/* Close button only on mobile */}
+
             <Button
               variant="ghost"
               size="icon"
@@ -208,56 +205,98 @@ function Sidebar({
           >
             {filteredItems.map((item) => {
               const hasChildren = Boolean(item.children?.length);
+
+              // =========================
+              // GROUP ITEM (children)
+              // =========================
               if (hasChildren) {
                 const isGroupOpen = openGroup === item.labelKey;
 
-                // When sidebar is closed on desktop, render children as individual icon buttons
+                // ✅ Sidebar CLOSED: only parent icon, hover opens flyout (desktop)
                 if (!isOpen) {
-                  return (
-                    <div key={item.labelKey} className="space-y-3">
-                      {item.children?.map((child) => {
-                        const childLabel = translate(child.labelKey, {
-                          defaultValue: child.labelKey,
-                        });
+                  const groupLabel = translate(item.labelKey, {
+                    defaultValue: item.labelKey,
+                  });
 
-                        return (
-                          <Tooltip key={child.to ?? child.labelKey}>
-                            <TooltipTrigger asChild>
-                              <NavLink
-                                to={child.to ?? "#"}
-                                end={child.end}
-                                className={({ isActive }) =>
-                                  cn(
-                                    "flex items-center text-sm font-medium transition-colors text-white",
-                                    "md:gap-0 md:justify-center md:mx-auto max-md:gap-3 max-md:px-3",
-                                    "md:h-12 md:w-12 md:rounded-xl max-md:rounded-xl max-md:py-2.5",
-                                    isActive
-                                      ? "bg-[#347248]"
-                                      : "bg-[#347248]/80 hover:bg-[#347248]"
-                                  )
-                                }
-                              >
-                                <child.icon className="h-5 w-5 flex-shrink-0" />
-                                {/* Show text on mobile always, on desktop hide when closed */}
-                                <span className="uppercase max-md:flex md:hidden">
-                                  {childLabel}
-                                </span>
-                              </NavLink>
-                            </TooltipTrigger>
-                            <TooltipContent
-                              side="right"
-                              className="hidden md:block"
+                  return (
+                    <div
+                      key={item.labelKey}
+                      className="relative"
+                      onMouseEnter={() => setOpenGroup(item.labelKey)}
+                      onMouseLeave={() => setOpenGroup(null)}
+                    >
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            className={cn(
+                              "flex items-center text-sm font-medium transition-colors text-white",
+                              "md:gap-0 md:justify-center md:mx-auto",
+                              "md:h-12 md:w-12 md:rounded-xl",
+                              "bg-[#6e2e34]/80 hover:bg-[#6e2e34]"
+                            )}
+                            aria-haspopup="menu"
+                            aria-expanded={isGroupOpen}
+                          >
+                            <item.icon className="h-5 w-5 flex-shrink-0" />
+                            {/* mobile-da text görkez (isleseň pozup bilersiň) */}
+                            <span className="uppercase max-md:flex md:hidden ml-3">
+                              {groupLabel}
+                            </span>
+                          </button>
+                        </TooltipTrigger>
+
+                        <TooltipContent
+                          side="right"
+                          className="hidden md:block"
+                        >
+                          <p className="uppercase">{groupLabel}</p>
+                        </TooltipContent>
+                      </Tooltip>
+
+                      {/* Flyout children (desktop only) */}
+                      <div
+                        className={cn(
+                          "absolute left-full top-0 ml-2 hidden md:block",
+                          "min-w-56 rounded-xl border border-border bg-card/95 backdrop-blur shadow-lg",
+                          "transition-all duration-150",
+                          isGroupOpen
+                            ? "opacity-100 translate-x-0"
+                            : "opacity-0 -translate-x-1 pointer-events-none"
+                        )}
+                        role="menu"
+                      >
+                        <div className="p-2 space-y-1">
+                          {item.children?.map((child) => (
+                            <NavLink
+                              key={child.to ?? child.labelKey}
+                              to={child.to ?? "#"}
+                              end={child.end}
+                              onClick={() => setOpenGroup(null)}
+                              className={({ isActive }) =>
+                                cn(
+                                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ring-1 ring-inset text-white",
+                                  isActive
+                                    ? "bg-[#347248] ring-[#347248]/40"
+                                    : "bg-[#347248]/80 ring-[#347248]/60 hover:bg-[#347248] hover:ring-[#347248]/80"
+                                )
+                              }
                             >
-                              <p className="uppercase">{childLabel}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        );
-                      })}
+                              <child.icon className="h-4 w-4" />
+                              <span className="uppercase">
+                                {translate(child.labelKey, {
+                                  defaultValue: child.labelKey,
+                                })}
+                              </span>
+                            </NavLink>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   );
                 }
 
-                // When sidebar is open, render as grouped dropdown
+                // ✅ Sidebar OPEN: grouped dropdown (your existing)
                 return (
                   <div
                     key={item.labelKey}
@@ -276,8 +315,8 @@ function Sidebar({
                         "flex w-full items-center rounded-xl py-2.5 text-sm font-medium transition-colors ring-1 ring-inset text-white",
                         "gap-3 px-3",
                         isGroupOpen
-                          ? "bg-[#347248] ring-[#347248]/40"
-                          : "bg-[#347248]/80 ring-[#347248]/60 hover:bg-[#347248] hover:ring-[#347248]/80"
+                          ? "bg-[#6e2e34]/80 hover:bg-[#6e2e34]"
+                          : "bg-[#6e2e34]/80 hover:bg-[#6e2e34]"
                       )}
                       aria-expanded={isGroupOpen}
                     >
@@ -294,6 +333,7 @@ function Sidebar({
                         )}
                       />
                     </button>
+
                     <div
                       className={cn(
                         "rounded-xl bg-muted/50 shadow-sm transition-all overflow-hidden",
@@ -330,6 +370,9 @@ function Sidebar({
                 );
               }
 
+              // =========================
+              // SINGLE ITEM
+              // =========================
               if (!item.to) return null;
 
               const itemLabel = translate(item.labelKey, {
@@ -358,7 +401,6 @@ function Sidebar({
                   }
                 >
                   <item.icon className="h-5 w-5 flex-shrink-0" />
-                  {/* Show text on mobile always, on desktop only when open */}
                   <span
                     className={cn(
                       "uppercase",
@@ -370,7 +412,6 @@ function Sidebar({
                 </NavLink>
               );
 
-              // Wrap with tooltip when sidebar is closed on desktop
               if (!isOpen) {
                 return (
                   <Tooltip key={item.to}>
@@ -405,6 +446,7 @@ function Sidebar({
           </div>
         </div>
       </aside>
+
       {isOpen && (
         <div
           className="fixed inset-0 z-20 bg-black/30 backdrop-blur-sm md:hidden"
