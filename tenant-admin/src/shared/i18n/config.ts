@@ -227,6 +227,42 @@ const resources = {
         to: "To",
       },
 
+      supervisors: {
+        searchPlaceholder: "Search supervisors...",
+        exportError: "Failed to export supervisors.",
+        actions: {
+          add: "Add Supervisor",
+          export: "Export",
+        },
+        table: {
+          name: "Name",
+          login: "Login",
+          department: "Department",
+          projects: "Projects",
+          status: "Status",
+          actions: "Actions",
+          empty: "No supervisors yet.",
+          noResults: "No supervisors match your search.",
+          phone: "Phone",
+          email: "Email",
+        },
+        form: {
+          editTitle: "Edit Supervisor",
+          createTitle: "Add Supervisor",
+          subtitle: "Supervisor details",
+          name: "Full name",
+          login: "Login",
+          phone: "Phone number",
+          email: "Email",
+          profession: "Profession",
+          department: "Department",
+          departmentPlaceholder: "Select department",
+          password: "Password",
+          projects: "Projects",
+          status: "Status",
+        },
+      },
+
       categories: {
         tabs: {
           observation: "Observation Category",
@@ -595,6 +631,42 @@ const resources = {
         to: "Bitiş",
       },
 
+      supervisors: {
+        searchPlaceholder: "Denetci ara...",
+        exportError: "Denetci listesi disari aktarilamadi.",
+        actions: {
+          add: "Denetci Ekle",
+          export: "Excel'e aktar",
+        },
+        table: {
+          name: "Ad Soyad",
+          login: "Login",
+          department: "Departman",
+          projects: "Projeler",
+          status: "Durum",
+          actions: "Islemler",
+          empty: "Henuz denetci yok.",
+          noResults: "Aramaniza uyan denetci yok.",
+          phone: "Telefon",
+          email: "E-posta",
+        },
+        form: {
+          editTitle: "Denetciyi Duzenle",
+          createTitle: "Denetci Ekle",
+          subtitle: "Denetci detaylari",
+          name: "Ad Soyad",
+          login: "Login",
+          phone: "Telefon numarasi",
+          email: "E-posta",
+          profession: "Meslek",
+          department: "Departman",
+          departmentPlaceholder: "Departman secin",
+          password: "Sifre",
+          projects: "Projeler",
+          status: "Durum",
+        },
+      },
+
       categories: {
         tabs: { observation: "Gözlem Kategorisi", task: "Görev Kategorisi" },
         actions: { addCategory: "Kategori Ekle" },
@@ -959,6 +1031,42 @@ const resources = {
         supervisorsWithMostTasks: "Руководители с наибольшим числом задач",
         from: "От",
         to: "До",
+      },
+
+      supervisors: {
+        searchPlaceholder: "Поиск руководителей...",
+        exportError: "Не удалось экспортировать список руководителей.",
+        actions: {
+          add: "Добавить руководителя",
+          export: "Экспорт",
+        },
+        table: {
+          name: "Имя",
+          login: "Логин",
+          department: "Отдел",
+          projects: "Проекты",
+          status: "Статус",
+          actions: "Действия",
+          empty: "Руководителей пока нет.",
+          noResults: "Нет руководителей по вашему запросу.",
+          phone: "Телефон",
+          email: "Эл. почта",
+        },
+        form: {
+          editTitle: "Редактировать руководителя",
+          createTitle: "Добавить руководителя",
+          subtitle: "Данные руководителя",
+          name: "Полное имя",
+          login: "Логин",
+          phone: "Номер телефона",
+          email: "Эл. почта",
+          profession: "Профессия",
+          department: "Отдел",
+          departmentPlaceholder: "Выберите отдел",
+          password: "Пароль",
+          projects: "Проекты",
+          status: "Статус",
+        },
       },
 
       categories: {

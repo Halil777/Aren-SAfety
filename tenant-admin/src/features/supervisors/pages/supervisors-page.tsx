@@ -1,103 +1,269 @@
-import type React from 'react'
-import { ShieldPlus, Pencil, Trash2 } from 'lucide-react'
-import { useState } from 'react'
-import { useTranslation } from 'react-i18next'
-import { Card, CardContent } from '@/shared/ui/card'
-import { Button } from '@/shared/ui/button'
-import { PageHeader } from '@/shared/ui/page-header'
-import { useProjectsQuery } from '@/features/projects/api/hooks'
-import { useDepartmentsQuery } from '@/features/departments/api/hooks'
+import type React from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  FileSpreadsheet,
+  Search,
+  ShieldPlus,
+  Pencil,
+  Trash2,
+  MoreHorizontal,
+  ArrowUpDown,
+  CheckCircle2,
+  XCircle,
+  Power,
+} from "lucide-react";
+import { useTranslation } from "react-i18next";
+
+import { Card, CardContent } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+import { PageHeader } from "@/shared/ui/page-header";
+import { cn } from "@/shared/lib/cn";
+
+import { useProjectsQuery } from "@/features/projects/api/hooks";
+import { useDepartmentsQuery } from "@/features/departments/api/hooks";
 import {
   useCreateSupervisorMutation,
   useDeleteSupervisorMutation,
   useSupervisorsQuery,
   useUpdateSupervisorMutation,
-} from '../api/hooks'
-import type { Supervisor, SupervisorInput } from '../types/supervisor'
+} from "../api/hooks";
+import type { Supervisor, SupervisorInput } from "../types/supervisor";
+
+// shadcn/ui (recommended for premium feel)
+import { Badge } from "@/shared/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/shared/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/shared/ui/dialog";
+import { Separator } from "@/shared/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui/tooltip";
+
+type SortKey = "name" | "login" | "status";
+type SortDir = "asc" | "desc";
 
 export function SupervisorsPage() {
-  const { t } = useTranslation()
-  const projectsQuery = useProjectsQuery()
-  const departmentsQuery = useDepartmentsQuery()
-  const supervisorsQuery = useSupervisorsQuery()
-  const createMutation = useCreateSupervisorMutation()
-  const updateMutation = useUpdateSupervisorMutation()
-  const deleteMutation = useDeleteSupervisorMutation()
+  const { t } = useTranslation();
 
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const projectsQuery = useProjectsQuery();
+  const departmentsQuery = useDepartmentsQuery();
+  const supervisorsQuery = useSupervisorsQuery();
+
+  const createMutation = useCreateSupervisorMutation();
+  const updateMutation = useUpdateSupervisorMutation();
+  const deleteMutation = useDeleteSupervisorMutation();
+
+  const rows = supervisorsQuery.data ?? [];
+  const isLoading = supervisorsQuery.isLoading;
+  const error = supervisorsQuery.error as Error | null | undefined;
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+
+  // UI state
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // search (debounced)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const id = window.setTimeout(() => setDebouncedSearch(searchTerm), 220);
+    return () => window.clearTimeout(id);
+  }, [searchTerm]);
+
+  // filters
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "active" | "inactive"
+  >("all");
+  const [departmentFilter, setDepartmentFilter] = useState<string>("all");
+  const [projectFilter, setProjectFilter] = useState<string>("all");
+
+  // sorting
+  const [sortKey, setSortKey] = useState<SortKey>("name");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+
+  // delete confirm
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteName, setDeleteName] = useState<string>("");
+
   const [formState, setFormState] = useState<SupervisorForm>({
-    fullName: '',
-    phoneNumber: '',
-    email: '',
-    profession: '',
-    login: '',
-    password: '',
-    departmentId: '',
+    fullName: "",
+    phoneNumber: "",
+    email: "",
+    profession: "",
+    login: "",
+    password: "",
+    departmentId: "",
     projectIds: [],
     isActive: true,
-  })
+  });
 
-  const rows = supervisorsQuery.data ?? []
-  const isLoading = supervisorsQuery.isLoading
-  const error = supervisorsQuery.error as Error | null | undefined
-  const isSaving = createMutation.isPending || updateMutation.isPending
+  const departmentNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const d of departmentsQuery.data ?? []) map.set(d.id, d.name);
+    return map;
+  }, [departmentsQuery.data]);
+
+  const projectNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of projectsQuery.data ?? []) map.set(p.id, p.name);
+    return map;
+  }, [projectsQuery.data]);
+
+  const stats = useMemo(() => {
+    const total = rows.length;
+    const active = rows.filter((r) => r.isActive).length;
+    const inactive = total - active;
+    return { total, active, inactive };
+  }, [rows]);
+
+  const filteredRows = useMemo(() => {
+    const term = debouncedSearch.trim().toLowerCase();
+
+    let out = rows;
+
+    // status filter
+    if (statusFilter !== "all") {
+      out = out.filter((r) =>
+        statusFilter === "active" ? r.isActive : !r.isActive
+      );
+    }
+
+    // department filter
+    if (departmentFilter !== "all") {
+      out = out.filter((r) => (r.departmentId ?? "") === departmentFilter);
+    }
+
+    // project filter
+    if (projectFilter !== "all") {
+      out = out.filter((r) => {
+        const ids = r.projects?.map((p) => p.id) ?? r.projectIds ?? [];
+        return ids.includes(projectFilter);
+      });
+    }
+
+    // search
+    if (term) {
+      out = out.filter((r) => {
+        const depName =
+          r.department?.name ||
+          (r.departmentId ? departmentNameById.get(r.departmentId) : "") ||
+          "";
+        const projNames =
+          r.projects?.map((p) => p.name).join(", ") ||
+          (r.projectIds ?? [])
+            .map((pid) => projectNameById.get(pid) ?? "")
+            .filter(Boolean)
+            .join(", ");
+
+        const s = [
+          r.fullName,
+          r.login,
+          r.email ?? "",
+          r.phoneNumber,
+          r.profession ?? "",
+          depName,
+          projNames,
+          r.isActive ? "active" : "inactive",
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return s.includes(term);
+      });
+    }
+
+    // sort
+    const dir = sortDir === "asc" ? 1 : -1;
+    out = [...out].sort((a, b) => {
+      if (sortKey === "status") {
+        // active first in asc
+        const av = a.isActive ? 1 : 0;
+        const bv = b.isActive ? 1 : 0;
+        return (bv - av) * dir;
+      }
+      const av = (sortKey === "name" ? a.fullName : a.login).toLowerCase();
+      const bv = (sortKey === "name" ? b.fullName : b.login).toLowerCase();
+      return av.localeCompare(bv) * dir;
+    });
+
+    return out;
+  }, [
+    rows,
+    debouncedSearch,
+    statusFilter,
+    departmentFilter,
+    projectFilter,
+    sortKey,
+    sortDir,
+    departmentNameById,
+    projectNameById,
+  ]);
 
   const toggleProject = (id: string) => {
-    setFormState(s => ({
+    setFormState((s) => ({
       ...s,
       projectIds: s.projectIds.includes(id)
-        ? s.projectIds.filter(pid => pid !== id)
+        ? s.projectIds.filter((pid) => pid !== id)
         : [...s.projectIds, id],
-    }))
-  }
-
-  const handleDelete = async (id: string) => {
-    const confirmed = window.confirm(
-      t('common.confirmDelete', { defaultValue: 'Are you sure you want to delete?' }),
-    )
-    if (!confirmed) return
-    await deleteMutation.mutateAsync(id)
-  }
+    }));
+  };
 
   const handleOpenDrawer = (row?: Supervisor) => {
     if (row) {
-      setEditingId(row.id)
+      setEditingId(row.id);
       setFormState({
         fullName: row.fullName,
         phoneNumber: row.phoneNumber,
-        email: row.email ?? '',
-        profession: row.profession ?? '',
+        email: row.email ?? "",
+        profession: row.profession ?? "",
         login: row.login,
-        password: '',
-        departmentId: row.departmentId ?? '',
-        projectIds: row.projects?.map(p => p.id) ?? row.projectIds ?? [],
+        password: "",
+        departmentId: row.departmentId ?? "",
+        projectIds: row.projects?.map((p) => p.id) ?? row.projectIds ?? [],
         isActive: row.isActive,
-      })
+      });
     } else {
-      setEditingId(null)
+      setEditingId(null);
       setFormState({
-        fullName: '',
-        phoneNumber: '',
-        email: '',
-        profession: '',
-        login: '',
-        password: '',
-        departmentId: '',
+        fullName: "",
+        phoneNumber: "",
+        email: "",
+        profession: "",
+        login: "",
+        password: "",
+        departmentId: "",
         projectIds: [],
         isActive: true,
-      })
+      });
     }
-    setDrawerOpen(true)
-  }
+    setDrawerOpen(true);
+  };
 
   const handleCloseDrawer = () => {
-    setDrawerOpen(false)
-    setEditingId(null)
-  }
+    setDrawerOpen(false);
+    setEditingId(null);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
+
     const payload: SupervisorInput = {
       fullName: formState.fullName,
       phoneNumber: formState.phoneNumber,
@@ -108,286 +274,763 @@ export function SupervisorsPage() {
       departmentId: formState.departmentId || undefined,
       projectIds: formState.projectIds,
       isActive: formState.isActive,
-    }
+    };
 
     if (editingId) {
-      await updateMutation.mutateAsync({ id: editingId, data: payload })
+      await updateMutation.mutateAsync({ id: editingId, data: payload });
     } else {
-      await createMutation.mutateAsync(payload)
+      await createMutation.mutateAsync(payload);
     }
-    handleCloseDrawer()
-  }
+
+    handleCloseDrawer();
+  };
+
+  const openDeleteDialog = (row: Supervisor) => {
+    setDeleteId(row.id);
+    setDeleteName(row.fullName);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteId) return;
+    await deleteMutation.mutateAsync(deleteId);
+    setDeleteId(null);
+    setDeleteName("");
+  };
+
+  const toggleStatus = async (row: Supervisor) => {
+    const payload: SupervisorInput = {
+      fullName: row.fullName,
+      phoneNumber: row.phoneNumber,
+      email: row.email ?? undefined,
+      profession: row.profession ?? undefined,
+      login: row.login,
+      departmentId: row.departmentId ?? undefined,
+      projectIds: row.projects?.map((p) => p.id) ?? row.projectIds ?? [],
+      isActive: !row.isActive,
+    };
+    await updateMutation.mutateAsync({ id: row.id, data: payload });
+  };
+
+  const handleExport = async () => {
+    if (!filteredRows.length) return;
+
+    try {
+      const XLSX = await import("xlsx");
+      const today = new Date().toISOString().split("T")[0];
+
+      const data = filteredRows.map((row) => {
+        const departmentName =
+          row.department?.name ||
+          (row.departmentId ? departmentNameById.get(row.departmentId) : "") ||
+          "";
+        const projectNames =
+          row.projects?.map((p) => p.name).join(", ") ||
+          (row.projectIds ?? [])
+            .map((pid) => projectNameById.get(pid) ?? "")
+            .filter(Boolean)
+            .join(", ");
+
+        return {
+          [t("supervisors.table.name", { defaultValue: "Name" })]: row.fullName,
+          [t("supervisors.table.login", { defaultValue: "Login" })]: row.login,
+          [t("supervisors.table.department", { defaultValue: "Department" })]:
+            departmentName,
+          [t("supervisors.table.projects", { defaultValue: "Projects" })]:
+            projectNames,
+          [t("supervisors.table.status", { defaultValue: "Status" })]:
+            row.isActive
+              ? t("common.active", { defaultValue: "Active" })
+              : t("common.inactive", { defaultValue: "Inactive" }),
+          [t("supervisors.table.phone", { defaultValue: "Phone" })]:
+            row.phoneNumber,
+          [t("supervisors.table.email", { defaultValue: "Email" })]:
+            row.email ?? "",
+          [t("supervisors.form.profession", { defaultValue: "Profession" })]:
+            row.profession ?? "",
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Supervisors");
+      XLSX.writeFile(workbook, `supervisors_${today}.xlsx`);
+    } catch (err) {
+      console.error("Failed to export supervisors", err);
+      window.alert(
+        t("supervisors.exportError", {
+          defaultValue: "Failed to export supervisors.",
+        })
+      );
+    }
+  };
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey !== key) {
+      setSortKey(key);
+      setSortDir("asc");
+      return;
+    }
+    setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+  };
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title={t('pages.supervisors.title')}
-        description={t('pages.supervisors.description')}
-        actions={
-          <Button type="button" variant="secondary" onClick={() => handleOpenDrawer()}>
-            <ShieldPlus className="mr-2 h-4 w-4" />
-            {t('nav.supervisors')}
-          </Button>
-        }
-      />
-      <Card>
-        <CardContent className="space-y-4">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-border">
-              <thead className="bg-muted/50">
-                <tr>
-                  <Th>{t('supervisors.table.name', { defaultValue: 'Name' })}</Th>
-                  <Th>{t('supervisors.table.login', { defaultValue: 'Login' })}</Th>
-                  <Th>{t('supervisors.table.department', { defaultValue: 'Department' })}</Th>
-                  <Th>{t('supervisors.table.projects', { defaultValue: 'Projects' })}</Th>
-                  <Th>{t('supervisors.table.status', { defaultValue: 'Status' })}</Th>
-                  <Th className="w-28 text-center">
-                    {t('supervisors.table.actions', { defaultValue: 'Actions' })}
-                  </Th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-sm text-muted-foreground">
-                      {t('common.loading', { defaultValue: 'Loading...' })}
-                    </td>
-                  </tr>
-                ) : error ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-sm text-destructive">
-                      {error.message}
-                    </td>
-                  </tr>
-                ) : rows.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-6 text-center text-sm text-muted-foreground">
-                      {t('supervisors.table.empty', { defaultValue: 'No supervisors yet.' })}
-                    </td>
-                  </tr>
-                ) : (
-                  rows.map(row => (
-                    <tr key={row.id} className="hover:bg-muted/40">
-                      <Td>{row.fullName}</Td>
-                      <Td>{row.login}</Td>
-                      <Td>
-                        {row.department?.name ||
-                          departmentsQuery.data?.find(d => d.id === row.departmentId)?.name ||
-                          t('common.noData', { defaultValue: 'N/A' })}
-                      </Td>
-                      <Td>
-                        <div className="flex flex-wrap gap-1">
-                          {row.projects?.map(project => (
-                            <span
-                              key={project.id}
-                              className="rounded-full bg-muted px-2 py-0.5 text-xs text-foreground"
-                            >
-                              {project.name}
-                            </span>
-                          )) || t('common.noData', { defaultValue: 'N/A' })}
-                        </div>
-                      </Td>
-                      <Td>
-                        {row.isActive
-                          ? t('common.active', { defaultValue: 'Active' })
-                          : t('common.inactive', { defaultValue: 'Inactive' })}
-                      </Td>
-                      <Td className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            aria-label={t('common.edit', { defaultValue: 'Edit' })}
-                            onClick={() => handleOpenDrawer(row)}
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            aria-label={t('common.delete', { defaultValue: 'Delete' })}
-                            onClick={() => handleDelete(row.id)}
-                            disabled={deleteMutation.isPending}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </Td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+    <TooltipProvider>
+      <div className="space-y-6">
+        <PageHeader
+          title={t("pages.supervisors.title", { defaultValue: "Supervisors" })}
+          description={t("pages.supervisors.description", {
+            defaultValue: "Assign and monitor supervisors across projects.",
+          })}
+          actions={
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleExport}
+                disabled={isLoading || filteredRows.length === 0}
+              >
+                <FileSpreadsheet className="mr-2 h-4 w-4" />
+                {t("supervisors.actions.export", { defaultValue: "Export" })}
+              </Button>
 
-      {drawerOpen ? (
-        <div className="fixed inset-0 z-40 flex justify-end bg-black/40 backdrop-blur-sm">
-          <div className="h-screen w-full bg-background shadow-2xl md:w-[36%]">
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <div>
-                <h2 className="text-lg font-semibold">
-                  {editingId
-                    ? t('supervisors.form.editTitle', { defaultValue: 'Edit Supervisor' })
-                    : t('supervisors.form.createTitle', { defaultValue: 'Add Supervisor' })}
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {t('supervisors.form.subtitle', { defaultValue: 'Supervisor details' })}
-                </p>
-              </div>
-              <Button variant="ghost" onClick={handleCloseDrawer}>
-                {t('common.cancel', { defaultValue: 'Cancel' })}
+              <Button type="button" onClick={() => handleOpenDrawer()}>
+                <ShieldPlus className="mr-2 h-4 w-4" />
+                {t("supervisors.actions.add", {
+                  defaultValue: "Add Supervisor",
+                })}
               </Button>
             </div>
-            <div className="h-[calc(100vh-64px)] overflow-y-auto p-4">
-              <form className="space-y-4" onSubmit={handleSubmit}>
-                <TwoCol>
-                  <Field
-                    label={t('supervisors.form.name', { defaultValue: 'Full name' })}
-                    required
-                  >
-                    <input
-                      required
-                      type="text"
-                      value={formState.fullName}
-                      onChange={e => setFormState(s => ({ ...s, fullName: e.target.value }))}
-                      className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                    />
-                  </Field>
-                  <Field
-                    label={t('supervisors.form.login', { defaultValue: 'Login' })}
-                    required
-                  >
-                    <input
-                      required
-                      type="text"
-                      value={formState.login}
-                      onChange={e => setFormState(s => ({ ...s, login: e.target.value }))}
-                      className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                    />
-                  </Field>
-                </TwoCol>
+          }
+        />
 
-                <TwoCol>
-                  <Field
-                    label={t('supervisors.form.phone', { defaultValue: 'Phone number' })}
-                    required
-                  >
-                    <input
-                      required
-                      type="tel"
-                      value={formState.phoneNumber}
-                      onChange={e => setFormState(s => ({ ...s, phoneNumber: e.target.value }))}
-                      className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                    />
-                  </Field>
-                  <Field label={t('supervisors.form.email', { defaultValue: 'Email' })}>
-                    <input
-                      type="email"
-                      value={formState.email}
-                      onChange={e => setFormState(s => ({ ...s, email: e.target.value }))}
-                      className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                    />
-                  </Field>
-                </TwoCol>
+        {/* Stats */}
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          <StatCard
+            title={t("common.total", { defaultValue: "Total" })}
+            value={stats.total}
+          />
+          <StatCard
+            title={t("common.active", { defaultValue: "Active" })}
+            value={stats.active}
+            icon={<CheckCircle2 className="h-4 w-4" />}
+          />
+          <StatCard
+            title={t("common.inactive", { defaultValue: "Inactive" })}
+            value={stats.inactive}
+            icon={<XCircle className="h-4 w-4" />}
+          />
+        </div>
 
-                <Field label={t('supervisors.form.profession', { defaultValue: 'Profession' })}>
-                  <input
-                    type="text"
-                    value={formState.profession}
-                    onChange={e => setFormState(s => ({ ...s, profession: e.target.value }))}
-                    className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                  />
-                </Field>
-
-                <Field label={t('supervisors.form.department', { defaultValue: 'Department' })}>
-                  <select
-                    value={formState.departmentId}
-                    onChange={e => setFormState(s => ({ ...s, departmentId: e.target.value }))}
-                    className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                  >
-                    <option value="">
-                      {t('supervisors.form.departmentPlaceholder', {
-                        defaultValue: 'Select department',
-                      })}
-                    </option>
-                    {departmentsQuery.data?.map(department => (
-                      <option key={department.id} value={department.id}>
-                        {department.name}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-
-                <Field label={t('supervisors.form.password', { defaultValue: 'Password' })}>
-                  <input
-                    type="password"
-                    value={formState.password}
-                    placeholder={
-                      editingId
-                        ? t('users.form.passwordPlaceholderEdit', {
-                            defaultValue: 'Leave blank to keep current',
-                          })
-                        : t('users.form.passwordPlaceholder', {
-                            defaultValue: 'Set initial password',
-                          })
-                    }
-                    onChange={e => setFormState(s => ({ ...s, password: e.target.value }))}
-                    className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                  />
-                </Field>
-
-                <Field label={t('supervisors.form.projects', { defaultValue: 'Projects' })} required>
-                  <div className="flex flex-wrap gap-2">
-                    {projectsQuery.data?.map(project => {
-                      const selected = formState.projectIds.includes(project.id)
-                      return (
-                        <button
-                          type="button"
-                          key={project.id}
-                          onClick={() => toggleProject(project.id)}
-                          className={
-                            'rounded-full border px-3 py-1 text-sm transition ' +
-                            (selected
-                              ? 'border-primary bg-primary/10 text-primary'
-                              : 'border-border text-foreground')
-                          }
-                        >
-                          {project.name}
-                        </button>
-                      )
+        <Card className="shadow-sm">
+          <CardContent className="space-y-4">
+            {/* Search + Filters */}
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-1 flex-col gap-3 md:flex-row md:items-center">
+                <label className="relative w-full md:max-w-md">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder={t("supervisors.searchPlaceholder", {
+                      defaultValue: "Search supervisors...",
                     })}
-                    {!projectsQuery.data?.length
-                      ? t('common.noData', { defaultValue: 'N/A' })
-                      : null}
-                  </div>
-                </Field>
+                    aria-label={t("supervisors.searchPlaceholder", {
+                      defaultValue: "Search supervisors...",
+                    })}
+                    className="pl-9"
+                  />
+                </label>
 
-                <Field label={t('supervisors.form.status', { defaultValue: 'Status' })}>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={formState.isActive}
-                      onChange={e => setFormState(s => ({ ...s, isActive: e.target.checked }))}
-                      className="h-4 w-4 rounded border-border"
-                    />
-                    <span className="text-sm">
-                      {formState.isActive
-                        ? t('common.active', { defaultValue: 'Active' })
-                        : t('common.inactive', { defaultValue: 'Inactive' })}
-                    </span>
-                  </div>
-                </Field>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 md:flex md:gap-2">
+                  <FilterSelect
+                    value={statusFilter}
+                    onChange={(v) => setStatusFilter(v as any)}
+                    ariaLabel="Status filter"
+                    options={[
+                      {
+                        value: "all",
+                        label: t("common.all", { defaultValue: "All" }),
+                      },
+                      {
+                        value: "active",
+                        label: t("common.active", { defaultValue: "Active" }),
+                      },
+                      {
+                        value: "inactive",
+                        label: t("common.inactive", {
+                          defaultValue: "Inactive",
+                        }),
+                      },
+                    ]}
+                  />
 
+                  <FilterSelect
+                    value={departmentFilter}
+                    onChange={setDepartmentFilter}
+                    ariaLabel="Department filter"
+                    options={[
+                      {
+                        value: "all",
+                        label: t("supervisors.filters.allDepartments", {
+                          defaultValue: "All departments",
+                        }),
+                      },
+                      ...(departmentsQuery.data ?? []).map((d) => ({
+                        value: d.id,
+                        label: d.name,
+                      })),
+                    ]}
+                  />
+
+                  <FilterSelect
+                    value={projectFilter}
+                    onChange={setProjectFilter}
+                    ariaLabel="Project filter"
+                    options={[
+                      {
+                        value: "all",
+                        label: t("supervisors.filters.allProjects", {
+                          defaultValue: "All projects",
+                        }),
+                      },
+                      ...(projectsQuery.data ?? []).map((p) => ({
+                        value: p.id,
+                        label: p.name,
+                      })),
+                    ]}
+                  />
+                </div>
+              </div>
+
+              {/* Sub info */}
+              <div className="flex items-center justify-between gap-2 md:justify-end">
+                <span className="text-sm text-muted-foreground">
+                  {t("supervisors.table.showing", { defaultValue: "Showing" })}{" "}
+                  <span className="font-medium text-foreground">
+                    {filteredRows.length}
+                  </span>{" "}
+                  {t("supervisors.table.of", { defaultValue: "of" })}{" "}
+                  <span className="font-medium text-foreground">
+                    {rows.length}
+                  </span>
+                </span>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setStatusFilter("all");
+                    setDepartmentFilter("all");
+                    setProjectFilter("all");
+                  }}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  {t("common.reset", { defaultValue: "Reset" })}
+                </Button>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Table */}
+            <div className="overflow-x-auto rounded-lg border border-border">
+              <table className="min-w-full">
+                <thead className="bg-muted/40">
+                  <tr>
+                    <ThButton
+                      onClick={() => toggleSort("name")}
+                      active={sortKey === "name"}
+                    >
+                      {t("supervisors.table.name", { defaultValue: "Name" })}
+                      <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
+                    </ThButton>
+
+                    <ThButton
+                      onClick={() => toggleSort("login")}
+                      active={sortKey === "login"}
+                    >
+                      {t("supervisors.table.login", { defaultValue: "Login" })}
+                      <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
+                    </ThButton>
+
+                    <Th>
+                      {t("supervisors.table.department", {
+                        defaultValue: "Department",
+                      })}
+                    </Th>
+                    <Th>
+                      {t("supervisors.table.projects", {
+                        defaultValue: "Projects",
+                      })}
+                    </Th>
+
+                    <ThButton
+                      onClick={() => toggleSort("status")}
+                      active={sortKey === "status"}
+                    >
+                      {t("supervisors.table.status", {
+                        defaultValue: "Status",
+                      })}
+                      <ArrowUpDown className="ml-2 h-3.5 w-3.5" />
+                    </ThButton>
+
+                    <Th className="w-14 text-right">
+                      {t("supervisors.table.actions", {
+                        defaultValue: "Actions",
+                      })}
+                    </Th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-border bg-background">
+                  {isLoading ? (
+                    <SkeletonRows />
+                  ) : error ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-4 py-10 text-center text-sm text-destructive"
+                      >
+                        {error.message}
+                      </td>
+                    </tr>
+                  ) : rows.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-4 py-10 text-center text-sm text-muted-foreground"
+                      >
+                        {t("supervisors.table.empty", {
+                          defaultValue: "No supervisors yet.",
+                        })}
+                      </td>
+                    </tr>
+                  ) : filteredRows.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={6}
+                        className="px-4 py-10 text-center text-sm text-muted-foreground"
+                      >
+                        {t("supervisors.table.noResults", {
+                          defaultValue: "No supervisors match your filters.",
+                        })}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredRows.map((row) => {
+                      const dept =
+                        row.department?.name ||
+                        (row.departmentId
+                          ? departmentNameById.get(row.departmentId)
+                          : "") ||
+                        t("common.noData", { defaultValue: "N/A" });
+
+                      return (
+                        <tr
+                          key={row.id}
+                          className="group transition hover:bg-muted/30"
+                        >
+                          <Td className="font-medium">
+                            <div className="flex items-center gap-2">
+                              <div className="grid h-8 w-8 place-items-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
+                                {initials(row.fullName)}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="truncate">{row.fullName}</div>
+                                <div className="truncate text-xs text-muted-foreground">
+                                  {row.phoneNumber}
+                                </div>
+                              </div>
+                            </div>
+                          </Td>
+
+                          <Td>
+                            <span className="rounded-md bg-muted px-2 py-1 text-xs font-medium">
+                              {row.login}
+                            </span>
+                          </Td>
+
+                          <Td className="text-muted-foreground">{dept}</Td>
+
+                          <Td>
+                            <ProjectsBadges
+                              row={row}
+                              projectNameById={projectNameById}
+                            />
+                          </Td>
+
+                          <Td>
+                            {row.isActive ? (
+                              <Badge className="gap-1" variant="default">
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                {t("common.active", { defaultValue: "Active" })}
+                              </Badge>
+                            ) : (
+                              <Badge className="gap-1" variant="secondary">
+                                <XCircle className="h-3.5 w-3.5" />
+                                {t("common.inactive", {
+                                  defaultValue: "Inactive",
+                                })}
+                              </Badge>
+                            )}
+                          </Td>
+
+                          <Td className="text-right">
+                            <div className="flex justify-end">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    size="icon"
+                                    variant="ghost"
+                                    className="opacity-100 md:opacity-0 md:group-hover:opacity-100"
+                                    aria-label="Row actions"
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="w-48"
+                                >
+                                  <DropdownMenuLabel>
+                                    {t("common.actions", {
+                                      defaultValue: "Actions",
+                                    })}
+                                  </DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+
+                                  <DropdownMenuItem
+                                    onClick={() => handleOpenDrawer(row)}
+                                  >
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    {t("common.edit", { defaultValue: "Edit" })}
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuItem
+                                    onClick={() => toggleStatus(row)}
+                                    disabled={updateMutation.isPending}
+                                  >
+                                    <Power className="mr-2 h-4 w-4" />
+                                    {row.isActive
+                                      ? t("supervisors.actions.deactivate", {
+                                          defaultValue: "Deactivate",
+                                        })
+                                      : t("supervisors.actions.activate", {
+                                          defaultValue: "Activate",
+                                        })}
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuSeparator />
+
+                                  <DropdownMenuItem
+                                    onClick={() => openDeleteDialog(row)}
+                                    className="text-destructive focus:text-destructive"
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    {t("common.delete", {
+                                      defaultValue: "Delete",
+                                    })}
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </Td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Drawer */}
+        {drawerOpen ? (
+          <div className="fixed inset-0 z-40 flex justify-end bg-black/40 backdrop-blur-sm">
+            <div className="flex h-screen w-full flex-col bg-background shadow-2xl md:w-[420px]">
+              <div className="border-b border-border px-4 py-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="truncate text-lg font-semibold">
+                      {editingId
+                        ? t("supervisors.form.editTitle", {
+                            defaultValue: "Edit Supervisor",
+                          })
+                        : t("supervisors.form.createTitle", {
+                            defaultValue: "Add Supervisor",
+                          })}
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      {t("supervisors.form.subtitle", {
+                        defaultValue: "Supervisor details",
+                      })}
+                    </p>
+                  </div>
+                  <Button variant="ghost" onClick={handleCloseDrawer}>
+                    {t("common.close", { defaultValue: "Close" })}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4">
+                <form className="space-y-5" onSubmit={handleSubmit}>
+                  <Section
+                    title={t("supervisors.form.sectionIdentity", {
+                      defaultValue: "Identity",
+                    })}
+                  >
+                    <TwoCol>
+                      <Field
+                        label={t("supervisors.form.name", {
+                          defaultValue: "Full name",
+                        })}
+                        required
+                      >
+                        <input
+                          required
+                          type="text"
+                          value={formState.fullName}
+                          onChange={(e) =>
+                            setFormState((s) => ({
+                              ...s,
+                              fullName: e.target.value,
+                            }))
+                          }
+                          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                        />
+                      </Field>
+
+                      <Field
+                        label={t("supervisors.form.login", {
+                          defaultValue: "Login",
+                        })}
+                        required
+                      >
+                        <input
+                          required
+                          type="text"
+                          value={formState.login}
+                          onChange={(e) =>
+                            setFormState((s) => ({
+                              ...s,
+                              login: e.target.value,
+                            }))
+                          }
+                          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                        />
+                      </Field>
+                    </TwoCol>
+
+                    <TwoCol>
+                      <Field
+                        label={t("supervisors.form.phone", {
+                          defaultValue: "Phone number",
+                        })}
+                        required
+                      >
+                        <input
+                          required
+                          type="tel"
+                          value={formState.phoneNumber}
+                          onChange={(e) =>
+                            setFormState((s) => ({
+                              ...s,
+                              phoneNumber: e.target.value,
+                            }))
+                          }
+                          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                        />
+                      </Field>
+
+                      <Field
+                        label={t("supervisors.form.email", {
+                          defaultValue: "Email",
+                        })}
+                      >
+                        <input
+                          type="email"
+                          value={formState.email}
+                          onChange={(e) =>
+                            setFormState((s) => ({
+                              ...s,
+                              email: e.target.value,
+                            }))
+                          }
+                          className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                        />
+                      </Field>
+                    </TwoCol>
+
+                    <Field
+                      label={t("supervisors.form.profession", {
+                        defaultValue: "Profession",
+                      })}
+                    >
+                      <input
+                        type="text"
+                        value={formState.profession}
+                        onChange={(e) =>
+                          setFormState((s) => ({
+                            ...s,
+                            profession: e.target.value,
+                          }))
+                        }
+                        className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                      />
+                    </Field>
+                  </Section>
+
+                  <Section
+                    title={t("supervisors.form.sectionAccess", {
+                      defaultValue: "Access & Assignment",
+                    })}
+                  >
+                    <Field
+                      label={t("supervisors.form.department", {
+                        defaultValue: "Department",
+                      })}
+                    >
+                      <select
+                        value={formState.departmentId}
+                        onChange={(e) =>
+                          setFormState((s) => ({
+                            ...s,
+                            departmentId: e.target.value,
+                          }))
+                        }
+                        className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                      >
+                        <option value="">
+                          {t("supervisors.form.departmentPlaceholder", {
+                            defaultValue: "Select department",
+                          })}
+                        </option>
+                        {departmentsQuery.data?.map((department) => (
+                          <option key={department.id} value={department.id}>
+                            {department.name}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+
+                    <Field
+                      label={t("supervisors.form.password", {
+                        defaultValue: "Password",
+                      })}
+                    >
+                      <input
+                        type="password"
+                        value={formState.password}
+                        placeholder={
+                          editingId
+                            ? t("users.form.passwordPlaceholderEdit", {
+                                defaultValue: "Leave blank to keep current",
+                              })
+                            : t("users.form.passwordPlaceholder", {
+                                defaultValue: "Set initial password",
+                              })
+                        }
+                        onChange={(e) =>
+                          setFormState((s) => ({
+                            ...s,
+                            password: e.target.value,
+                          }))
+                        }
+                        className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                      />
+                    </Field>
+
+                    <Field
+                      label={t("supervisors.form.projects", {
+                        defaultValue: "Projects",
+                      })}
+                      required
+                    >
+                      <div className="flex flex-wrap gap-2">
+                        {projectsQuery.data?.map((project) => {
+                          const selected = formState.projectIds.includes(
+                            project.id
+                          );
+                          return (
+                            <button
+                              type="button"
+                              key={project.id}
+                              onClick={() => toggleProject(project.id)}
+                              className={cn(
+                                "rounded-full border px-3 py-1 text-sm transition",
+                                selected
+                                  ? "border-primary bg-primary/10 text-primary"
+                                  : "border-border text-foreground hover:bg-muted/40"
+                              )}
+                            >
+                              {project.name}
+                            </button>
+                          );
+                        })}
+                        {!projectsQuery.data?.length
+                          ? t("common.noData", { defaultValue: "N/A" })
+                          : null}
+                      </div>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        {t("supervisors.form.projectsHint", {
+                          defaultValue:
+                            "Select one or more projects for this supervisor.",
+                        })}
+                      </p>
+                    </Field>
+
+                    <Field
+                      label={t("supervisors.form.status", {
+                        defaultValue: "Status",
+                      })}
+                    >
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={formState.isActive}
+                          onChange={(e) =>
+                            setFormState((s) => ({
+                              ...s,
+                              isActive: e.target.checked,
+                            }))
+                          }
+                          className="h-4 w-4 rounded border-border"
+                        />
+                        <span className="text-sm">
+                          {formState.isActive
+                            ? t("common.active", { defaultValue: "Active" })
+                            : t("common.inactive", {
+                                defaultValue: "Inactive",
+                              })}
+                        </span>
+                      </div>
+                    </Field>
+                  </Section>
+                </form>
+              </div>
+
+              {/* Sticky footer */}
+              <div className="border-t border-border bg-background/80 px-4 py-3 backdrop-blur">
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={handleCloseDrawer}>
-                    {t('common.cancel', { defaultValue: 'Cancel' })}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCloseDrawer}
+                  >
+                    {t("common.cancel", { defaultValue: "Cancel" })}
                   </Button>
                   <Button
-                    type="submit"
+                    type="button"
+                    onClick={() => {
+                      // submit programmatically
+                      const form =
+                        document.querySelector<HTMLFormElement>("form");
+                      form?.requestSubmit();
+                    }}
                     disabled={
                       !formState.fullName ||
                       !formState.login ||
@@ -398,60 +1041,267 @@ export function SupervisorsPage() {
                     }
                   >
                     {editingId
-                      ? t('common.save', { defaultValue: 'Save' })
-                      : t('supervisors.actions.add', { defaultValue: 'Add Supervisor' })}
+                      ? t("common.save", { defaultValue: "Save" })
+                      : t("supervisors.actions.add", {
+                          defaultValue: "Add Supervisor",
+                        })}
                   </Button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
-        </div>
-      ) : null}
-    </div>
-  )
+        ) : null}
+
+        {/* Delete Dialog */}
+        <Dialog
+          open={!!deleteId}
+          onOpenChange={(open) => (!open ? setDeleteId(null) : null)}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {t("common.confirmDeleteTitle", {
+                  defaultValue: "Delete supervisor?",
+                })}
+              </DialogTitle>
+              <DialogDescription>
+                {t("common.confirmDelete", {
+                  defaultValue: "Are you sure you want to delete?",
+                })}{" "}
+                <span className="font-medium text-foreground">
+                  {deleteName}
+                </span>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteId(null)}>
+                {t("common.cancel", { defaultValue: "Cancel" })}
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                disabled={deleteMutation.isPending}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                {t("common.delete", { defaultValue: "Delete" })}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </TooltipProvider>
+  );
 }
 
+/* ------------------ helpers ------------------ */
+
 type SupervisorForm = {
-  fullName: string
-  phoneNumber: string
-  email: string
-  profession: string
-  login: string
-  password: string
-  departmentId: string
-  projectIds: string[]
-  isActive: boolean
-}
+  fullName: string;
+  phoneNumber: string;
+  email: string;
+  profession: string;
+  login: string;
+  password: string;
+  departmentId: string;
+  projectIds: string[];
+  isActive: boolean;
+};
 
 const TwoCol = ({ children }: { children: React.ReactNode }) => (
   <div className="grid grid-cols-1 gap-3 md:grid-cols-2">{children}</div>
-)
+);
 
 const Field = ({
   label,
   children,
   required,
 }: {
-  label: string
-  children: React.ReactNode
-  required?: boolean
+  label: string;
+  children: React.ReactNode;
+  required?: boolean;
 }) => (
   <label className="space-y-1 text-sm font-medium text-foreground">
-    <span>
+    <span className="flex items-center gap-1">
       {label}
       {required ? <span className="text-destructive">*</span> : null}
     </span>
     {children}
   </label>
-)
+);
 
 const Th = (props: React.HTMLAttributes<HTMLTableCellElement>) => (
   <th
     className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
     {...props}
   />
-)
+);
+
+const ThButton = ({
+  children,
+  onClick,
+  active,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  active?: boolean;
+}) => (
+  <th className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center rounded-md px-1 py-0.5 transition hover:text-foreground",
+        active ? "text-foreground" : "text-muted-foreground"
+      )}
+    >
+      {children}
+    </button>
+  </th>
+);
 
 const Td = (props: React.TdHTMLAttributes<HTMLTableCellElement>) => (
-  <td className="px-4 py-3 text-sm text-foreground align-middle" {...props} />
-)
+  <td
+    className={cn(
+      "px-4 py-3 text-sm text-foreground align-middle",
+      props.className
+    )}
+    {...props}
+  />
+);
+
+function initials(name: string) {
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  const a = parts[0]?.[0] ?? "";
+  const b = parts[1]?.[0] ?? "";
+  return (a + b).toUpperCase() || "—";
+}
+
+function ProjectsBadges({
+  row,
+  projectNameById,
+}: {
+  row: Supervisor;
+  projectNameById: Map<string, string>;
+}) {
+  const projects =
+    row.projects?.map((p) => p.name) ??
+    (row.projectIds ?? [])
+      .map((id) => projectNameById.get(id) ?? "")
+      .filter(Boolean);
+  if (!projects.length)
+    return <span className="text-muted-foreground">N/A</span>;
+
+  const visible = projects.slice(0, 2);
+  const rest = projects.length - visible.length;
+
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      {visible.map((name, idx) => (
+        <Badge
+          key={`${row.id}_${idx}`}
+          variant="secondary"
+          className="font-normal"
+        >
+          {name}
+        </Badge>
+      ))}
+
+      {rest > 0 ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge variant="outline" className="cursor-help font-normal">
+              +{rest}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            <div className="text-xs">{projects.slice(2).join(", ")}</div>
+          </TooltipContent>
+        </Tooltip>
+      ) : null}
+    </div>
+  );
+}
+
+function SkeletonRows() {
+  return (
+    <>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <tr key={i}>
+          <td colSpan={6} className="px-4 py-3">
+            <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
+          </td>
+        </tr>
+      ))}
+    </>
+  );
+}
+
+function StatCard({
+  title,
+  value,
+  icon,
+}: {
+  title: string;
+  value: number;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <Card className="shadow-sm">
+      <CardContent className="flex items-center justify-between gap-3 py-4">
+        <div>
+          <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {title}
+          </div>
+          <div className="mt-1 text-2xl font-semibold">{value}</div>
+        </div>
+        <div className="grid h-10 w-10 place-items-center rounded-full bg-muted text-muted-foreground">
+          {icon ?? <span className="text-sm font-semibold">#</span>}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-3 rounded-lg border border-border p-3">
+      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </div>
+      <div className="space-y-4">{children}</div>
+    </div>
+  );
+}
+
+function FilterSelect({
+  value,
+  onChange,
+  options,
+  ariaLabel,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  ariaLabel: string;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <select
+      aria-label={ariaLabel}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="h-10 w-full rounded-md border border-border bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 md:w-[180px]"
+    >
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
+      ))}
+    </select>
+  );
+}
