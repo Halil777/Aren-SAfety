@@ -1077,6 +1077,7 @@ export function SupervisorsPage() {
               <Button variant="outline" onClick={() => setDeleteId(null)}>
                 {t("common.cancel", { defaultValue: "Cancel" })}
               </Button>
+
               <Button
                 variant="destructive"
                 onClick={confirmDelete}
